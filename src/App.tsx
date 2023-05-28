@@ -1,4 +1,3 @@
-/* eslint-disable react/react-in-jsx-scope */
 import { Disclosure } from "@headlessui/react";
 import {
   ChevronLeftIcon,
