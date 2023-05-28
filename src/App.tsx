@@ -1,27 +1,17 @@
+/* eslint-disable react/react-in-jsx-scope */
 import { Disclosure } from "@headlessui/react";
 import {
+  ChevronLeftIcon,
   ChevronUpIcon,
-  TrashIcon,
   PencilIcon,
   PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/20/solid";
-
-import {
-  QueryClient,
-  QueryClientProvider,
-  useMutation,
-  useQuery,
-} from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { Zodios } from "@zodios/core";
+import { AnimatePresence, motion } from "framer-motion";
+import { PropsWithChildren, useState } from "react";
 import { z } from "zod";
-import {
-  BrowserRouter,
-  Link,
-  Route,
-  Routes,
-  useParams,
-} from "react-router-dom";
 
 const Todo = z.object({
   id: z.number(),
@@ -184,66 +174,84 @@ const api = new Zodios("http://127.0.0.1:6969/api/v1", [
 
 const client = new QueryClient();
 
+// const App = () => {
+//   return (
+//     <BrowserRouter>
+//       <QueryClientProvider client={client}>
+//         <Routes>
+//           <Route path="/" element={<ListView />} />
+//           <Route path="/list/:id" element={<Test />} />
+//         </Routes>
+//       </QueryClientProvider>
+//     </BrowserRouter>
+//   );
+// };
+
 const App = () => {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={client}>
-        <Routes>
-          <Route path="/" element={<ListView />} />
-          <Route path="/list/:id" element={<Test />} />
-        </Routes>
-      </QueryClientProvider>
-    </BrowserRouter>
+    <div>
+      <Test />
+    </div>
   );
 };
 
-const Wot = z.object({
-  id: z.preprocess((val) => parseInt(val as string), z.number()),
-});
+const Background = (props: PropsWithChildren<{ test?: boolean }>) => {
+  return (
+    <div
+      className={`relative overflow-y-auto overflow-x-hidden h-screen v-full ${
+        props.test ? "bg-purple-400" : "bg-gray-800"
+      }`}>
+      {props.children}
+    </div>
+  );
+};
 
 const Test = () => {
-  const rawParams = useParams();
-  const params = Wot.parse(rawParams);
-
-  const { error, data } = useQuery({
-    queryKey: ["list", params.id],
-    queryFn: () => api.getList({ params: { id: params.id } }),
-  });
-
-  const createTodo = useMutation({
-    mutationFn: (todo: CreateTodo) => api.createTodo(todo),
-    onSettled: () => client.invalidateQueries(["list", params.id]),
-  });
-
-  if (error) return <p>Error: {JSON.stringify(error)}</p>;
-  if (!data) return <p>Loading...</p>;
+  const [test, setTest] = useState(true);
 
   return (
-    <>
-      <p>Name: {data.name}</p>
-      <button
-        className="bg-blue-400 rounded px-2 py-1"
-        onClick={() => {
-          const content = prompt("New todo");
-          if (content) {
-            createTodo.mutate({
-              content: content,
-              done: false,
-              listId: params.id,
-            });
-          }
-        }}>
-        Create Todo
-      </button>
-      {data.todos.map((todo) => (
-        <TodoItem key={todo.id} id={todo.id} />
-      ))}
-    </>
+    <Background>
+      <AnimatePresence mode="wait">
+        {test ? (
+          <Test2 key={"test2"} onClick={() => setTest(false)} />
+        ) : (
+          <Test3 key={"test3"} onClick={() => setTest(true)} />
+        )}
+      </AnimatePresence>
+    </Background>
   );
 };
 
-// <ListView />
-// <ReactQueryDevtools />
+const Test2 = (props: { onClick: () => void }) => {
+  return (
+    <motion.div
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ duration: 0.2 }}>
+      <button className="rounded px-3 py-1 bg-blue-600" onClick={props.onClick}>
+        Change
+      </button>
+    </motion.div>
+  );
+};
+
+const Test3 = (props: { onClick: () => void }) => {
+  return (
+    <motion.div
+      initial={{ x: "-100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "-100%" }}
+      transition={{ duration: 0.2 }}>
+      <div className="flex items-center h-12 bg-gray-500">
+        <button onClick={props.onClick}>
+          <ChevronLeftIcon className="w-12 h-12 text-red-500" />
+        </button>
+      </div>
+      <p>This is a test for fun</p>
+    </motion.div>
+  );
+};
 
 const TodoItem = (props: { id: number }) => {
   const { error, data } = useQuery({
@@ -369,6 +377,14 @@ const ListView = () => {
                       }
                     }}>
                     Create Todo
+                  </button>
+
+                  <button
+                    className="bg-gray-400 rounded px-3 py-1"
+                    onClick={() => {
+                      console.log("Haha");
+                    }}>
+                    Test
                   </button>
 
                   {item.todos.map((todo) => (
