@@ -1,5 +1,9 @@
 import { Menu } from "@headlessui/react";
-import { EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/20/solid";
+import {
+  EllipsisHorizontalIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid";
 import { Todo, TodoPatch } from "../interfaces/todo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchTodo } from "../api/fetch";
@@ -73,6 +77,16 @@ const TodoItem = ({ id }: TodoItemProps) => {
         <Menu.Items
           className="flex flex-col gap-2 w-44 origin-top-left absolute right-0 z-50 bg-pink-400 px-1.5 py-1.5 rounded"
           as="div">
+          <Menu.Item>
+            {({ active }) => (
+              <button
+                className="w-full text-white flex items-center bg-sky-600 rounded px-2 py-1"
+                onClick={() => console.log("Todo Edit")}>
+                <PencilSquareIcon className="w-6 h-6 text-red-400" />
+                <span className="ml-1">Edit</span>
+              </button>
+            )}
+          </Menu.Item>
           <Menu.Item>
             {({ active }) => (
               <button
