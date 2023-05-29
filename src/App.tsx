@@ -8,11 +8,12 @@ import {
 } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRef, useState } from "react";
-import { CreateTodo, Todo } from "./interfaces/todo";
+import { CreateTodo } from "./interfaces/todo";
 import TodoItem from "./components/TodoItem";
 import ViewLists from "./components/ViewLists";
 import { fetchList } from "./api/fetch";
 import api from "./api/api";
+import { CreateList } from "./interfaces/list";
 
 // TODO(patrik):
 //   - Page Transition Animation
@@ -84,6 +85,32 @@ const HomePage = ({
 }: {
   setPageState: (newState: PageState) => void;
 }) => {
+  const [isCreateListOpen, setCreateListOpen] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const createList = useMutation({
+    mutationFn: (list: CreateList) => {
+      return api.createList(list);
+    },
+    onSettled: () => client.invalidateQueries(["lists"]),
+    onSuccess: closeCreateList,
+  });
+
+  function closeCreateList() {
+    setCreateListOpen(false);
+  }
+
+  function openCreateList() {
+    setCreateListOpen(true);
+  }
+
+  function createNewList() {
+    if (nameInputRef.current) {
+      const name = nameInputRef.current.value;
+      createList.mutate({ name });
+    }
+  }
+
   return (
     <motion.div
       className="container mt-2 mx-auto"
@@ -91,13 +118,49 @@ const HomePage = ({
       animate={{ x: 0 }}
       exit={{ x: "-150%" }}
       transition={{ type: "spring", duration: 0.4 }}>
-      <CreateNewFolder />
+      <button
+        className="bg-red-400 w-full rounded py-2 text-lg"
+        onClick={openCreateList}>
+        New List
+      </button>
       <div className="h-4"></div>
       <ViewLists
         onFolderClick={(folderId) => {
           setPageState({ mode: "view-folder", folderId });
         }}
       />
+
+      <Dialog open={isCreateListOpen} onClose={closeCreateList}>
+        <div className="fixed inset-0 bg-black opacity-75"></div>
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <Dialog.Panel className="bg-blue-500">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  createNewList();
+                }}>
+                {/* <label> */}
+                {/*   <span>Content: </span> */}
+                {/* </label> */}
+                <input ref={nameInputRef} type="text" />
+              </form>
+
+              <button
+                className="bg-pink-400 rounded px-2 py-1"
+                onClick={() => createNewList()}>
+                New List
+              </button>
+
+              <button
+                className="bg-pink-400 rounded px-2 py-1"
+                onClick={closeCreateList}>
+                Close
+              </button>
+            </Dialog.Panel>
+          </div>
+        </div>
+      </Dialog>
     </motion.div>
   );
 };
@@ -120,7 +183,7 @@ const ViewFolderPage = ({ listId, setPageState }: ViewFolderPageProps) => {
   const [isCreateTodoOpen, setCreateTodoOpen] = useState(false);
   const contentInputRef = useRef<HTMLInputElement>(null);
 
-  // TODO(patrik): Disable form submition when sending request
+  // TODO(patrik): Disable form submit when sending request
   const createTodo = useMutation({
     mutationFn: (todo: CreateTodo) => {
       return api.createTodo(todo);
@@ -209,14 +272,6 @@ const ViewFolderPage = ({ listId, setPageState }: ViewFolderPageProps) => {
         </div>
       </Dialog>
     </motion.div>
-  );
-};
-
-const CreateNewFolder = () => {
-  return (
-    <button className="bg-red-400 w-full rounded py-2 text-lg">
-      New Folder
-    </button>
   );
 };
 
@@ -313,4 +368,137 @@ const CreateNewFolder = () => {
 //
 //   const content = useMutation({
 //     mutationFn: (content: string) =>
-//       api.u
+//       api.updateTodo({ content: content }, { params: { id: props.id } }),
+//     onSettled: () => client.invalidateQueries(["todo", props.id]),
+//   });
+//
+//   const deleteTodo = useMutation({
+//     mutationFn: () => api.deleteTodo(undefined, { params: { id: props.id } }),
+//     onSettled: () => client.invalidateQueries(["lists"]),
+//   });
+//
+//   if (error) return <p>Error: {JSON.stringify(error)}</p>;
+//   if (!data) return <p>Loading...</p>;
+//
+//   return (
+//     <div key={data.id} className="flex items-center">
+//       <input
+//         checked={data.done}
+//         disabled={done.isLoading}
+//         id={`todo-${data.id}`}
+//         type="checkbox"
+//         value=""
+//         className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+//         onChange={() => {
+//           done.mutate(!data.done);
+//         }}
+//       />
+//       <label htmlFor={`todo-${data.id}`} className="">
+//         {data.content}
+//       </label>
+//
+//       <button
+//         onClick={() => {
+//           const newContent = prompt("New Content", data.content);
+//           if (newContent) {
+//             content.mutate(newContent);
+//           }
+//         }}>
+//         <PencilIcon className="h-5 w-5 text-black" />
+//       </button>
+//
+//       <button onClick={() => deleteTodo.mutate()}>
+//         <TrashIcon className="h-6 w-6 text-black" />
+//       </button>
+//     </div>
+//   );
+// };
+
+// const ListView = () => {
+//   const { error, data } = useQuery({
+//     queryKey: ["lists"],
+//     queryFn: () => api.getAllLists(),
+//   });
+//
+//   const createList = useMutation({
+//     mutationFn: (list: CreateList) => api.createList(list),
+//     onSettled: () => client.invalidateQueries(["lists"]),
+//   });
+//
+//   const createTodo = useMutation({
+//     mutationFn: (todo: CreateTodo) => api.createTodo(todo),
+//     onSettled: () => client.invalidateQueries(["lists"]),
+//   });
+//
+//   if (error) return <p>Error: {JSON.stringify(error)}</p>;
+//   if (!data) return <p>Loading...</p>;
+//
+//   return (
+//     <div>
+//       <button
+//         className="w-full bg-blue-400 rounded px-4 py-1"
+//         onClick={() => {
+//           const name = prompt("List name");
+//           if (name) {
+//             createList.mutate({ name });
+//           }
+//         }}>
+//         Create new List
+//       </button>
+//
+//       <button className="fixed bottom-4 right-4 bg-blue-600 rounded-full p-2">
+//         <PlusIcon className="w-8 h-8" />
+//       </button>
+//
+//       {data.map((item) => (
+//         <div key={item.id}>
+//           <Disclosure>
+//             {({ open }) => (
+//               <>
+//                 <Disclosure.Button className="flex justify-between w-full bg-red-300">
+//                   <span>{item.name}</span>
+//                   <ChevronUpIcon
+//                     className={`${
+//                       open ? "" : "rotate-180 transform"
+//                     } h-5 w-5 text-black`}
+//                   />
+//                 </Disclosure.Button>
+//
+//                 <Disclosure.Panel className="">
+//                   <button
+//                     className="bg-gray-400 rounded px-3 py-1"
+//                     onClick={() => {
+//                       const content = prompt("Todo");
+//                       if (content) {
+//                         createTodo.mutate({
+//                           content: content,
+//                           done: false,
+//                           listId: item.id,
+//                         });
+//                       }
+//                     }}>
+//                     Create Todo
+//                   </button>
+//
+//                   <button
+//                     className="bg-gray-400 rounded px-3 py-1"
+//                     onClick={() => {
+//                       console.log("Haha");
+//                     }}>
+//                     Test
+//                   </button>
+//
+//                   {item.todos.map((todo) => (
+//                     <TodoItem key={todo.id} id={todo.id} />
+//                   ))}
+//                 </Disclosure.Panel>
+//               </>
+//             )}
+//           </Disclosure>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// };
+
+export default App;
