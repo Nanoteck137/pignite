@@ -205,16 +205,39 @@ const Background = (props: PropsWithChildren<{ test?: boolean }>) => {
   );
 };
 
+interface ViewTodo {
+  mode: "viewtodo";
+  todoId: number;
+}
+
+interface Closed {
+  mode: "closed";
+}
+
+type Test = Closed | ViewTodo;
+
 const Test = () => {
-  const [test, setTest] = useState(true);
+  const [test, setTest] = useState<Test>({ mode: "closed" });
 
   return (
     <Background>
       <AnimatePresence mode="wait">
-        {test ? (
-          <Test2 key={"test2"} onClick={() => setTest(false)} />
+        {test.mode == "closed" ? (
+          <Test2
+            key={"test2"}
+            onClick={() =>
+              setTest({
+                mode: "viewtodo",
+                todoId: Math.floor(Math.random() * 100),
+              })
+            }
+          />
         ) : (
-          <Test3 key={"test3"} onClick={() => setTest(true)} />
+          <Test3
+            key={"test3"}
+            todo={test.todoId}
+            onClick={() => setTest({ mode: "closed" })}
+          />
         )}
       </AnimatePresence>
     </Background>
@@ -235,7 +258,7 @@ const Test2 = (props: { onClick: () => void }) => {
   );
 };
 
-const Test3 = (props: { onClick: () => void }) => {
+const Test3 = (props: { todo: number; onClick: () => void }) => {
   return (
     <motion.div
       initial={{ x: "-100%" }}
@@ -248,6 +271,7 @@ const Test3 = (props: { onClick: () => void }) => {
         </button>
       </div>
       <p>This is a test for fun</p>
+      <p>Todo: {props.todo}</p>
     </motion.div>
   );
 };
