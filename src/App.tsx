@@ -60,7 +60,7 @@ const Site = () => {
   }
 
   return (
-    <div className="relative overflow-y-auto overflow-x-hidden h-screen v-full bg-black">
+    <div className="overflow-x-hidden">
       <AnimatePresence mode="wait">
         {page.mode == "home" && (
           <HomePage key={"home"} setPageState={setPageState} />
@@ -85,9 +85,9 @@ const HomePage = ({
   return (
     <motion.div
       className="container mt-2 mx-auto"
-      initial={{ x: "-100%" }}
+      initial={{ x: "-150%" }}
       animate={{ x: 0 }}
-      exit={{ x: "-100%" }}
+      exit={{ x: "-150%" }}
       transition={{ type: "spring", duration: 0.4 }}>
       <CreateNewFolder />
       <div className="h-4"></div>
@@ -138,9 +138,9 @@ const ViewFolderPage = ({ folderId, setPageState }: ViewFolderPageProps) => {
 
   return (
     <motion.div
-      initial={{ x: "100%" }}
+      initial={{ x: "150%" }}
       animate={{ x: 0 }}
-      exit={{ x: "100%" }}
+      exit={{ x: "150%" }}
       transition={{ type: "spring", duration: 0.4 }}>
       <div className="flex items-center justify-between h-16 bg-white pr-2">
         <button
