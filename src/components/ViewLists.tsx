@@ -3,7 +3,7 @@ import ListItem from "./ListItem";
 import { fetchLists } from "../api/fetch";
 
 type ViewListsProps = {
-  onFolderClick?: (folderId: number) => void;
+  onListItemClicked?: (listId: number) => void;
 };
 
 function useLists() {
@@ -13,7 +13,7 @@ function useLists() {
   });
 }
 
-const ViewLists = ({ onFolderClick }: ViewListsProps) => {
+const ViewLists = ({ onListItemClicked }: ViewListsProps) => {
   const { data, isError, isLoading } = useLists();
 
   if (isError) return <p>Error</p>;
@@ -26,7 +26,7 @@ const ViewLists = ({ onFolderClick }: ViewListsProps) => {
           <ListItem
             key={item.id}
             name={item.name}
-            onClick={() => onFolderClick && onFolderClick(item.id)}
+            onClick={() => onListItemClicked && onListItemClicked(item.id)}
           />
         );
       })}

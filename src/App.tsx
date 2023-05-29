@@ -44,16 +44,16 @@ const App = () => {
   );
 };
 
-interface ViewFolder {
-  mode: "view-folder";
-  folderId: number;
+interface Lists {
+  mode: "lists";
+  listId: number;
 }
 
 interface Home {
   mode: "home";
 }
 
-type PageState = Home | ViewFolder;
+type PageState = Home | Lists;
 
 const Site = () => {
   const [page, setPage] = useState<PageState>({ mode: "home" });
@@ -68,10 +68,10 @@ const Site = () => {
         {page.mode == "home" && (
           <HomePage key={"home"} setPageState={setPageState} />
         )}
-        {page.mode == "view-folder" && (
-          <ViewFolderPage
-            key={"view-folder"}
-            listId={page.folderId}
+        {page.mode == "lists" && (
+          <ListPage
+            key={"lists"}
+            listId={page.listId}
             setPageState={setPageState}
           />
         )}
@@ -125,8 +125,8 @@ const HomePage = ({
       </button>
       <div className="h-4"></div>
       <ViewLists
-        onFolderClick={(folderId) => {
-          setPageState({ mode: "view-folder", folderId });
+        onListItemClicked={(listId) => {
+          setPageState({ mode: "lists", listId });
         }}
       />
 
@@ -165,7 +165,7 @@ const HomePage = ({
   );
 };
 
-type ViewFolderPageProps = {
+type ListPageProps = {
   listId: number;
   setPageState: (newState: PageState) => void;
 };
@@ -177,7 +177,7 @@ function useList(id: number) {
   });
 }
 
-const ViewFolderPage = ({ listId, setPageState }: ViewFolderPageProps) => {
+const ListPage = ({ listId, setPageState }: ListPageProps) => {
   const { data, isError, isLoading } = useList(listId);
 
   const [isCreateTodoOpen, setCreateTodoOpen] = useState(false);
