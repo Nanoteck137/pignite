@@ -6,7 +6,12 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid";
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import { Zodios } from "@zodios/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { PropsWithChildren, useState } from "react";
@@ -173,108 +178,92 @@ const api = new Zodios("http://127.0.0.1:6969/api/v1", [
 
 const client = new QueryClient();
 
+const App = () => {
+  return (
+    <QueryClientProvider client={client}>
+      <Site />
+    </QueryClientProvider>
+  );
+};
+
 // const App = () => {
 //   return (
-//     <BrowserRouter>
-//       <QueryClientProvider client={client}>
-//         <Routes>
-//           <Route path="/" element={<ListView />} />
-//           <Route path="/list/:id" element={<Test />} />
-//         </Routes>
-//       </QueryClientProvider>
-//     </BrowserRouter>
+//     <div>
+//       <Test />
+//     </div>
 //   );
 // };
 
-const App = () => {
-  return (
-    <div>
-      <Test />
-    </div>
-  );
-};
+// const Background = (props: PropsWithChildren<{ test?: boolean }>) => {
+//   return (
+//     <div
+//       className={`relative overflow-y-auto overflow-x-hidden h-screen v-full ${
+//         props.test ? "bg-purple-400" : "bg-gray-800"
+//       }`}>
+//       {props.children}
+//     </div>
+//   );
+// };
 
-const Background = (props: PropsWithChildren<{ test?: boolean }>) => {
-  return (
-    <div
-      className={`relative overflow-y-auto overflow-x-hidden h-screen v-full ${
-        props.test ? "bg-purple-400" : "bg-gray-800"
-      }`}>
-      {props.children}
-    </div>
-  );
-};
-
-interface ViewTodo {
-  mode: "viewtodo";
-  todoId: number;
-}
-
-interface Closed {
-  mode: "closed";
-}
-
-type Test = Closed | ViewTodo;
-
-const Test = () => {
-  const [test, setTest] = useState<Test>({ mode: "closed" });
-
-  return (
-    <Background>
-      <AnimatePresence mode="wait">
-        {test.mode == "closed" ? (
-          <Test2
-            key={"test2"}
-            onClick={() =>
-              setTest({
-                mode: "viewtodo",
-                todoId: Math.floor(Math.random() * 100),
-              })
-            }
-          />
-        ) : (
-          <Test3
-            key={"test3"}
-            todo={test.todoId}
-            onClick={() => setTest({ mode: "closed" })}
-          />
-        )}
-      </AnimatePresence>
-    </Background>
-  );
-};
-
-const Test2 = (props: { onClick: () => void }) => {
-  return (
-    <motion.div
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
-      transition={{ duration: 0.2 }}>
-      <button className="rounded px-3 py-1 bg-blue-600" onClick={props.onClick}>
-        Change
-      </button>
-    </motion.div>
-  );
-};
-
-const Test3 = (props: { todo: number; onClick: () => void }) => {
-  return (
-    <motion.div
-      initial={{ x: "-100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "-100%" }}
-      transition={{ duration: 0.2 }}>
-      <div className="flex items-center h-12 bg-gray-500">
-        <button onClick={props.onClick}>
-          <ChevronLeftIcon className="w-12 h-12 text-red-500" />
-        </button>
-      </div>
-      <p>This is a test for fun</p>
-      <p>Todo: {props.todo}</p>
-    </motion.div>
-  );
-};
+// const Test = () => {
+//   const [test, setTest] = useState<Test>({ mode: "closed" });
+//
+//   return (
+//     <Background>
+//       <AnimatePresence mode="wait">
+//         {test.mode == "closed" ? (
+//           <Test2
+//             key={"test2"}
+//             onClick={() =>
+//               setTest({
+//                 mode: "viewtodo",
+//                 todoId: Math.floor(Math.random() * 100),
+//               })
+//             }
+//           />
+//         ) : (
+//           <Test3
+//             key={"test3"}
+//             todo={test.todoId}
+//             onClick={() => setTest({ mode: "closed" })}
+//           />
+//         )}
+//       </AnimatePresence>
+//     </Background>
+//   );
+// };
+//
+// const Test2 = (props: { onClick: () => void }) => {
+//   return (
+//     <motion.div
+//       initial={{ x: "100%" }}
+//       animate={{ x: 0 }}
+//       exit={{ x: "100%" }}
+//       transition={{ duration: 0.2 }}>
+//       <button className="rounded px-3 py-1 bg-blue-600" onClick={props.onClick}>
+//         Change
+//       </button>
+//     </motion.div>
+//   );
+// };
+//
+// const Test3 = (props: { todo: number; onClick: () => void }) => {
+//   return (
+//     <motion.div
+//       initial={{ x: "-100%" }}
+//       animate={{ x: 0 }}
+//       exit={{ x: "-100%" }}
+//       transition={{ duration: 0.2 }}>
+//       <div className="flex items-center h-12 bg-gray-500">
+//         <button onClick={props.onClick}>
+//           <ChevronLeftIcon className="w-12 h-12 text-red-500" />
+//         </button>
+//       </div>
+//       <p>This is a test for fun</p>
+//       <p>Todo: {props.todo}</p>
+//     </motion.div>
+//   );
+// };
 
 const TodoItem = (props: { id: number }) => {
   const { error, data } = useQuery({
@@ -332,6 +321,62 @@ const TodoItem = (props: { id: number }) => {
       <button onClick={() => deleteTodo.mutate()}>
         <TrashIcon className="h-6 w-6 text-black" />
       </button>
+    </div>
+  );
+};
+
+interface ViewTodo {
+  mode: "viewtodo";
+  todoId: number;
+}
+
+interface Home {
+  mode: "home";
+}
+
+type PageState = Home | ViewTodo;
+
+const Site = () => {
+  const [page, setPage] = useState<PageState>({ mode: "home" });
+
+  function setPageState(newState: PageState) {
+    setPage(newState);
+  }
+
+  return (
+    <div>
+      {page.mode == "home" && <HomePage setPageState={setPageState} />}
+      {page.mode == "viewtodo" && (
+        <ViewTodoPage todoId={page.todoId} setPageState={setPageState} />
+      )}
+    </div>
+  );
+};
+
+const HomePage = (props: { setPageState: (newState: PageState) => void }) => {
+  return (
+    <div>
+      <button
+        className="rounded bg-blue-500 px-3 py-1"
+        onClick={() => props.setPageState({ mode: "viewtodo", todoId: 123 })}>
+        Goto Todo
+      </button>
+    </div>
+  );
+};
+
+const ViewTodoPage = (props: {
+  todoId: number;
+  setPageState: (newState: PageState) => void;
+}) => {
+  return (
+    <div>
+      <button
+        className="rounded bg-blue-500 px-3 py-1"
+        onClick={() => props.setPageState({ mode: "home" })}>
+        Home
+      </button>
+      <p>Todo: {props.todoId}</p>
     </div>
   );
 };
