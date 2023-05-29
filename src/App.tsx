@@ -1,60 +1,33 @@
-import { Dialog, Menu } from "@headlessui/react";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  EllipsisHorizontalIcon,
-  PlusIcon,
-  TrashIcon,
-} from "@heroicons/react/20/solid";
+import { Dialog } from "@headlessui/react";
+import { ChevronLeftIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Zodios } from "@zodios/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { z } from "zod";
+import { CreateList, List } from "./interfaces/list";
+import { CreateTodo, Todo, TodoPatch } from "./interfaces/todo";
+import TodoItem from "./components/TodoItem";
+import ViewFolders from "./components/ViewFolders";
 
 // TODO(patrik):
 //   - Page Transition Animation
-//   - Fetch Folders
-//   - Fetch Todos
-//   - Create Todos
-//   - Create Folders
-//   - Delete Todos
-//   - Delete Folders
-//   - Edit Todos
-//   - Edit Folders
+//   - Modal Animation
+//
+//   - Todos:
+//     - Fetch
+//     - Create
+//     - Edit
+//     - Delete
+//   - Folders:
+//     - Fetch
+//     - Create
+//     - Edit
+//     - Delete
+//
 //   - Style Cleanup
 //   - Mobile
 //   - Desktop
-
-const Todo = z.object({
-  id: z.number(),
-  content: z.string().min(1),
-  done: z.boolean().default(false),
-  listId: z.number(),
-});
-type Todo = z.infer<typeof Todo>;
-
-const CreateTodo = Todo.omit({ id: true });
-type CreateTodo = z.infer<typeof CreateTodo>;
-
-const TodoPatch = z.object({
-  content: z.string().min(1).optional(),
-  done: z.boolean().optional(),
-});
-
-const Id = z.object({
-  id: z.number(),
-});
-type Id = z.infer<typeof Id>;
-
-const List = z.object({
-  id: z.number(),
-  name: z.string(),
-  todos: z.array(Id),
-});
-
-const CreateList = List.omit({ id: true, todos: true });
-type CreateList = z.infer<typeof CreateList>;
 
 const api = new Zodios("http://127.0.0.1:6969/api/v1", [
   {
@@ -215,10 +188,18 @@ const Site = () => {
 
   return (
     <div className="relative overflow-y-auto overflow-x-hidden h-screen v-full bg-black">
-      {page.mode == "home" && <HomePage setPageState={setPageState} />}
-      {page.mode == "view-folder" && (
-        <ViewFolderPage folderId={page.folderId} setPageState={setPageState} />
-      )}
+      <AnimatePresence mode="wait">
+        {page.mode == "home" && (
+          <HomePage key={"home"} setPageState={setPageState} />
+        )}
+        {page.mode == "view-folder" && (
+          <ViewFolderPage
+            key={"view-folder"}
+            folderId={page.folderId}
+            setPageState={setPageState}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -229,7 +210,12 @@ const HomePage = ({
   setPageState: (newState: PageState) => void;
 }) => {
   return (
-    <div className="container mt-2 mx-auto">
+    <motion.div
+      className="container mt-2 mx-auto"
+      initial={{ x: "-100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "-100%" }}
+      transition={{ type: "spring", duration: 0.4 }}>
       <CreateNewFolder />
       <div className="h-4"></div>
       <ViewFolders
@@ -237,7 +223,7 @@ const HomePage = ({
           setPageState({ mode: "view-folder", folderId });
         }}
       />
-    </div>
+    </motion.div>
   );
 };
 
@@ -270,7 +256,11 @@ const ViewFolderPage = ({ folderId, setPageState }: ViewFolderPageProps) => {
   }
 
   return (
-    <div>
+    <motion.div
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", duration: 0.4 }}>
       <div className="flex items-center justify-between h-16 bg-white pr-2">
         <button
           className="text-white"
@@ -322,100 +312,7 @@ const ViewFolderPage = ({ folderId, setPageState }: ViewFolderPageProps) => {
           </div>
         </div>
       </Dialog>
-    </div>
-  );
-};
-
-type TodoItemProps = {
-  todo: Todo;
-};
-
-const TodoItem = ({ todo }: TodoItemProps) => {
-  return (
-    <div className="flex justify-between items-center bg-green-500 rounded py-2 px-2">
-      <label className="flex items-center">
-        <input
-          className="w-5 h-5 rounded-full focus:ring-0 focus:ring-offset-0"
-          type="checkbox"
-        />
-        <span className="ml-2">{todo.content}</span>
-      </label>
-
-      <Menu className="relative" as="div">
-        <Menu.Button className="text-white flex h-full">
-          <EllipsisHorizontalIcon className="w-8 h-8" />
-        </Menu.Button>
-        <Menu.Items
-          className="flex flex-col gap-2 w-44 origin-top-left absolute right-0 z-50 bg-pink-400 px-1.5 py-1.5 rounded"
-          as="div">
-          <Menu.Item>
-            {({ active }) => (
-              <button
-                className="w-full text-white flex items-center bg-sky-600 rounded px-2 py-1"
-                onClick={() => console.log("Todo Delete")}>
-                <TrashIcon className="w-6 h-6 text-red-400" />
-                <span className="ml-1">Delete</span>
-              </button>
-            )}
-          </Menu.Item>
-        </Menu.Items>
-      </Menu>
-
-      {/* <button className="" onClick={() => console.log("Open Menu")}> */}
-      {/* <EllipsisHorizontalIcon className="w-6 h-6" /> */}
-      {/* </button> */}
-    </div>
-  );
-};
-
-type ViewFoldersProps = {
-  onFolderClick?: (folderId: number) => void;
-};
-
-const ViewFolders = ({ onFolderClick }: ViewFoldersProps) => {
-  const arr = new Array(100).fill(0).map(() => {
-    const num = Math.floor(Math.random() * 100);
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    const data = new Array(num)
-      .fill(0)
-      .map(() => chars.charAt(Math.floor(Math.random() * chars.length)))
-      .join("");
-
-    return `Folder ${data}`;
-  });
-
-  return (
-    <div className="flex flex-col gap-2">
-      {arr.map((item, i) => {
-        return (
-          <FolderItem
-            key={i}
-            name={item}
-            onClick={() => onFolderClick && onFolderClick(i)}
-          />
-        );
-      })}
-    </div>
-  );
-};
-
-type FolderItemProps = {
-  name: string;
-  onClick?: () => void;
-};
-
-const FolderItem = ({ name, onClick }: FolderItemProps) => {
-  // TODO(patrik): Remove truncation
-  return (
-    <button
-      className="flex items-center justify-between rounded bg-blue-500"
-      onClick={onClick}>
-      <span className="text-left max-w-[75%] truncate text-lg ml-4">
-        {name}
-      </span>
-      <ChevronRightIcon className="w-12 h-12" />
-    </button>
+    </motion.div>
   );
 };
 
