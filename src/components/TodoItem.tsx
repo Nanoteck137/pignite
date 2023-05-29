@@ -80,7 +80,9 @@ const TodoItem = ({ id }: TodoItemProps) => {
           <Menu.Item>
             {({ active }) => (
               <button
-                className="w-full text-white flex items-center bg-sky-600 rounded px-2 py-1"
+                className={`w-full text-white flex items-center  rounded px-2 py-1 ${
+                  active ? "bg-sky-500" : "bg-sky-600"
+                }`}
                 onClick={() => console.log("Todo Edit")}>
                 <PencilSquareIcon className="w-6 h-6 text-red-400" />
                 <span className="ml-1">Edit</span>
@@ -90,7 +92,9 @@ const TodoItem = ({ id }: TodoItemProps) => {
           <Menu.Item>
             {({ active }) => (
               <button
-                className="w-full text-white flex items-center bg-sky-600 rounded px-2 py-1"
+                className={`w-full text-white flex items-center  rounded px-2 py-1 ${
+                  active ? "bg-sky-500" : "bg-sky-600"
+                }`}
                 onClick={() => console.log("Todo Delete")}>
                 <TrashIcon className="w-6 h-6 text-red-400" />
                 <span className="ml-1">Delete</span>
