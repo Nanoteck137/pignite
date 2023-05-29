@@ -1,14 +1,16 @@
 import { Dialog } from "@headlessui/react";
 import { ChevronLeftIcon, PlusIcon } from "@heroicons/react/20/solid";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Zodios } from "@zodios/core";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRef, useState } from "react";
-import { z } from "zod";
-import { CreateList, List } from "./interfaces/list";
-import { CreateTodo, Todo, TodoPatch } from "./interfaces/todo";
+import { Todo } from "./interfaces/todo";
 import TodoItem from "./components/TodoItem";
-import ViewFolders from "./components/ViewFolders";
+import ViewLists from "./components/ViewLists";
+import { fetchList } from "./api/fetch";
 
 // TODO(patrik):
 //   - Page Transition Animation
@@ -28,135 +30,6 @@ import ViewFolders from "./components/ViewFolders";
 //   - Style Cleanup
 //   - Mobile
 //   - Desktop
-
-const api = new Zodios("http://127.0.0.1:6969/api/v1", [
-  {
-    method: "get",
-    path: "/list",
-    alias: "getAllLists",
-    description: "Get all the lists",
-    response: z.array(List),
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "get",
-    path: "/list/:id",
-    alias: "getList",
-    description: "Get single list",
-    response: List,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "get",
-    path: "/todo/:id",
-    alias: "getTodo",
-    description: "Get single todo",
-    response: Todo,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "patch",
-    path: "/todo/:id",
-    alias: "updateTodo",
-    description: "Update todo",
-    parameters: [
-      {
-        name: "todo",
-        type: "Body",
-        schema: TodoPatch,
-      },
-    ],
-    response: Todo,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "post",
-    path: "/list",
-    alias: "createList",
-    description: "Create new list",
-    parameters: [
-      {
-        name: "todo",
-        type: "Body",
-        schema: CreateList,
-      },
-    ],
-    response: List.omit({ todos: true }),
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "post",
-    path: "/todo",
-    alias: "createTodo",
-    description: "Create new todo",
-    parameters: [
-      {
-        name: "todo",
-        type: "Body",
-        schema: CreateTodo,
-      },
-    ],
-    response: Todo,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "delete",
-    path: "/todo/:id",
-    alias: "deleteTodo",
-    description: "Delete todo",
-    response: z.object({}),
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-]);
 
 const client = new QueryClient();
 
@@ -218,7 +91,7 @@ const HomePage = ({
       transition={{ type: "spring", duration: 0.4 }}>
       <CreateNewFolder />
       <div className="h-4"></div>
-      <ViewFolders
+      <ViewLists
         onFolderClick={(folderId) => {
           setPageState({ mode: "view-folder", folderId });
         }}
@@ -232,13 +105,21 @@ type ViewFolderPageProps = {
   setPageState: (newState: PageState) => void;
 };
 
+function useList(id: number) {
+  return useQuery({
+    queryKey: ["lists", id],
+    queryFn: () => fetchList(id),
+  });
+}
+
 const ViewFolderPage = ({ folderId, setPageState }: ViewFolderPageProps) => {
+  const { data, isError, isLoading } = useList(folderId);
+
   const [isCreateTodoOpen, setCreateTodoOpen] = useState(false);
   const contentInputRef = useRef<HTMLInputElement>(null);
 
-  const todos: Todo[] = new Array(20).fill(0).map((_, i) => {
-    return { id: i, content: "Hello World", done: false, listId: 0 };
-  });
+  if (isError) return <p>Error</p>;
+  if (isLoading) return <p>Loading...</p>;
 
   function closeCreateTodo() {
     setCreateTodoOpen(false);
@@ -278,8 +159,8 @@ const ViewFolderPage = ({ folderId, setPageState }: ViewFolderPageProps) => {
       </button>
 
       <div className="flex flex-col gap-2">
-        {todos.map((item) => {
-          return <TodoItem key={item.id} todo={item} />;
+        {data.todos.map((item) => {
+          return <TodoItem key={item.id} id={item.id} />;
         })}
       </div>
 

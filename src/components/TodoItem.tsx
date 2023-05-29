@@ -1,20 +1,69 @@
 import { Menu } from "@headlessui/react";
 import { EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/20/solid";
-import { Todo } from "../interfaces/todo";
+import { Todo, TodoPatch } from "../interfaces/todo";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchTodo } from "../api/fetch";
+import api from "../api/api";
 
 type TodoItemProps = {
-  todo: Todo;
+  id: number;
 };
 
-const TodoItem = ({ todo }: TodoItemProps) => {
+function useTodo(id: number) {
+  return useQuery({
+    queryKey: ["todos", id],
+    queryFn: () => fetchTodo(id),
+  });
+}
+
+const TodoItem = ({ id }: TodoItemProps) => {
+  const client = useQueryClient();
+  const { data, isError, isLoading } = useTodo(id);
+
+  const editTodo = useMutation({
+    mutationFn: (data: TodoPatch) => {
+      return api.updateTodo(data, { params: { id } });
+    },
+
+    onMutate: async (data) => {
+      await client.cancelQueries({ queryKey: ["todos", id] });
+      const previousTodo = client.getQueryData<Todo>(["todos", id]);
+
+      const newTodo = {
+        ...previousTodo,
+        done: data.done,
+        content: data.content || previousTodo?.content,
+      };
+      client.setQueryData(["todos", id], newTodo);
+      return { previousTodo, newTodo };
+    },
+
+    onError: (_err, _newTodo, context) => {
+      if (context) {
+        client.setQueryData(["todos", id], context.previousTodo);
+      }
+    },
+
+    onSettled: () => {
+      client.invalidateQueries({ queryKey: ["todos", id] });
+    },
+  });
+
+  if (isError) return <p>Error</p>;
+  if (isLoading) return <p>Loading...</p>;
+
   return (
     <div className="flex justify-between items-center bg-green-500 rounded py-2 px-2">
       <label className="flex items-center">
         <input
+          checked={data.done}
           className="w-5 h-5 rounded-full focus:ring-0 focus:ring-offset-0"
           type="checkbox"
+          onChange={() => {
+            editTodo.mutate({ done: !data.done });
+          }}
         />
-        <span className="ml-2">{todo.content}</span>
+        <span className="ml-2">{data.content}</span>
       </label>
 
       <Menu className="relative" as="div">

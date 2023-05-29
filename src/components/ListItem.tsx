@@ -1,11 +1,11 @@
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 
-type FolderItemProps = {
+type ListItemProps = {
   name: string;
   onClick?: () => void;
 };
 
-const FolderItem = ({ name, onClick }: FolderItemProps) => {
+const ListItem = ({ name, onClick }: ListItemProps) => {
   // TODO(patrik): Remove truncation
   return (
     <button
@@ -19,4 +19,4 @@ const FolderItem = ({ name, onClick }: FolderItemProps) => {
   );
 };
 
-export default FolderItem;
+export default ListItem;
