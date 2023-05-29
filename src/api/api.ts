@@ -3,7 +3,7 @@ import { z } from "zod";
 import { List, CreateList } from "../interfaces/list";
 import { Todo, TodoPatch, CreateTodo, TodoWithoutId } from "../interfaces/todo";
 
-const api = new Zodios("http://127.0.0.1:6969/api/v1", [
+const api = new Zodios("http://10.28.28.6:6969/api/v1", [
   {
     method: "get",
     path: "/list",
