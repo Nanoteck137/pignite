@@ -1,135 +1,52 @@
-import { Zodios } from "@zodios/core";
 import { z } from "zod";
-import { List, CreateList } from "../interfaces/list";
-import { Todo, TodoPatch, CreateTodo, TodoWithoutId } from "../interfaces/todo";
+import { pb } from "./pocketbase";
 
-const api = new Zodios("http://10.28.28.6:6969/api/v1", [
-  {
-    method: "get",
-    path: "/list",
-    alias: "getAllLists",
-    description: "Get all the lists",
-    response: z.array(List),
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "get",
-    path: "/list/:id",
-    alias: "getList",
-    description: "Get single list",
-    response: List,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "get",
-    path: "/todo/:id",
-    alias: "getTodo",
-    description: "Get single todo",
-    response: Todo,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "patch",
-    path: "/todo/:id",
-    alias: "updateTodo",
-    description: "Update todo",
-    parameters: [
-      {
-        name: "todo",
-        type: "Body",
-        schema: TodoPatch,
-      },
-    ],
-    response: TodoWithoutId,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "post",
-    path: "/list",
-    alias: "createList",
-    description: "Create new list",
-    parameters: [
-      {
-        name: "todo",
-        type: "Body",
-        schema: CreateList,
-      },
-    ],
-    response: List.omit({ todos: true }),
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "post",
-    path: "/todo",
-    alias: "createTodo",
-    description: "Create new todo",
-    parameters: [
-      {
-        name: "todo",
-        type: "Body",
-        schema: CreateTodo,
-      },
-    ],
-    response: Todo,
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-  {
-    method: "delete",
-    path: "/todo/:id",
-    alias: "deleteTodo",
-    description: "Delete todo",
-    response: z.object({}),
-    errors: [
-      {
-        status: "default",
-        schema: z.object({
-          message: z.string(),
-        }),
-      },
-    ],
-  },
-]);
+const BaseModel = z.object({
+  id: z.string(),
+  created: z.string(),
+  updated: z.string(),
+});
+type BaseModel = z.infer<typeof BaseModel>;
 
-export default api;
+const Record = BaseModel.merge(
+  z.object({
+    collectionId: z.string(),
+    collectionName: z.string(),
+  }),
+);
+type Record = z.infer<typeof Record>;
+
+const Project = Record.merge(
+  z.object({
+    name: z.string(),
+    color: z.string(),
+  }),
+);
+type Project = z.infer<typeof Project>;
+
+const Projects = z.array(Project);
+type Projects = z.infer<typeof Projects>;
+
+const List = Record.merge(
+  z.object({
+    name: z.string(),
+  }),
+);
+type List = z.infer<typeof List>;
+
+export async function getProjects() {
+  const data = await pb.collection("projects").getFullList();
+  return await Projects.parseAsync(data);
+}
+
+export async function getProjectById(projectId: string) {
+  const data = await pb.collection("projects").getOne(projectId);
+  return await Project.parseAsync(data);
+}
+
+export async function getProjectLists(projectId: string) {
+  const data = await pb
+    .collection("lists")
+    .getFullList({ filter: `project="${projectId}"` });
+  return await z.array(List).parseAsync(data);
+}
