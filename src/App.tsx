@@ -26,9 +26,6 @@ import { pb } from "./api/pocketbase";
 //  - Modal for creating new projects
 //  - Modal for creating new lists
 //  - Modal for creating new list items
-//  - Edit Projects
-//  - Edit Lists
-//  - Edit List Items
 //  - Cleanup
 
 const client = new QueryClient();
