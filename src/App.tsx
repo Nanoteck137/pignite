@@ -1,7 +1,7 @@
-import { Dialog } from "@headlessui/react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  HomeIcon,
   PlusIcon,
 } from "@heroicons/react/20/solid";
 import {
@@ -10,14 +10,6 @@ import {
   useMutation,
   useQuery,
 } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
-import { useRef, useState } from "react";
-import { CreateTodo } from "./interfaces/todo";
-import TodoItem from "./components/TodoItem";
-import ViewLists from "./components/ViewLists";
-import { CreateList } from "./interfaces/list";
-import PocketBase from "pocketbase";
-import { z } from "zod";
 import {
   BrowserRouter,
   Link,
@@ -25,7 +17,9 @@ import {
   Routes,
   useParams,
 } from "react-router-dom";
-import { getProjectById, getProjectLists, getProjects } from "./api/api";
+import { getProjectForPage, getProjects } from "./api/api";
+import ProjectList from "./components/ProjectList";
+import { pb } from "./api/pocketbase";
 
 // TODO(patrik):
 //   - Page Transition Animation
@@ -72,51 +66,83 @@ const HomePage = () => {
 
   return (
     <div>
-      {data.map((item) => {
-        return (
-          <div key={item.id}>
-            <Link
-              className="flex items-center justify-between rounded bg-blue-500"
-              to={`/project/${item.id}`}>
-              <span className="text-left max-w-[75%] truncate text-lg ml-4">
-                {item.name}
-              </span>
-              <ChevronRightIcon className="w-12 h-12" />
-            </Link>
-          </div>
-        );
-      })}
+      <div className="bg-white h-10">
+        <div className="container mx-auto bg-pink-200 h-full flex justify-between items-center px-2">
+          <Link to="/">
+            <HomeIcon className="w-8 h-8 text-black" />
+          </Link>
+          <button
+            onClick={() => {
+              console.log("Create ");
+            }}>
+            <PlusIcon className="w-10 h-10" />
+          </button>
+        </div>
+      </div>
+
+      <div className="container mx-auto">
+        {data.map((item) => {
+          return (
+            <div key={item.id}>
+              <Link
+                className="flex items-center justify-between rounded bg-blue-500"
+                to={`/project/${item.id}`}>
+                <span className="text-left max-w-[75%] truncate text-lg ml-4">
+                  {item.name}
+                </span>
+                <ChevronRightIcon className="w-12 h-12" />
+              </Link>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
 
 const ProjectPage = () => {
   const { id } = useParams();
-  const project = useQuery({
-    queryKey: ["projects", id],
-    queryFn: () => getProjectById(id || ""),
+
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["project", id],
+    queryFn: () => getProjectForPage(id || ""),
     enabled: !!id,
   });
 
-  const lists = useQuery({
-    queryKey: ["projects", id, "lists"],
-    queryFn: () => getProjectLists(id || ""),
-    enabled: !!project.data,
+  const createList = useMutation({
+    mutationFn: (name: string) =>
+      pb.collection("lists").create({ name, project: id }),
+    onSettled: () => client.invalidateQueries(["project", id]),
   });
 
-  if (project.isError || lists.isError) return <p>Error</p>;
-  if (project.isLoading || lists.isLoading) return <p>Loading...</p>;
+  if (isError) return <p className="text-white">Error</p>;
+  if (isLoading) return <p className="text-white">Loading...</p>;
 
   return (
-    <div className="text-white">
-      <p>Project: {project.data.name}</p>
-      {lists.data.map((item) => {
-        return (
-          <div key={item.id}>
-            <p className="text-white">{item.name}</p>
-          </div>
-        );
-      })}
+    <div className="w-full">
+      <div className="bg-white h-10">
+        <div className="container mx-auto bg-pink-200 h-full flex justify-between items-center px-2">
+          <Link to="/">
+            <HomeIcon className="w-8 h-8 text-black" />
+          </Link>
+          <button
+            onClick={() => {
+              const name = prompt("List Name");
+              if (name) {
+                createList.mutate(name);
+              }
+            }}>
+            <PlusIcon className="w-10 h-10" />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 container mx-auto">
+        <p className="text-white">Project: {data.project.name}</p>
+        {data.lists.map((list) => {
+          return <ProjectList key={list} listId={list} />;
+        })}
+      </div>
     </div>
   );
 };
