@@ -1,4 +1,5 @@
 import {
+  ArrowLeftIcon,
   ChevronRightIcon,
   HomeIcon,
   PlusIcon,
@@ -28,6 +29,7 @@ import { pb } from "./api/pocketbase";
 //  - Edit Projects
 //  - Edit Lists
 //  - Edit List Items
+//  - Cleanup
 
 const client = new QueryClient();
 
@@ -55,33 +57,34 @@ const HomePage = () => {
 
   return (
     <div>
-      <div className="bg-white h-10">
-        <div className="container mx-auto bg-pink-200 h-full flex justify-between items-center px-2">
+      <div className="bg-white h-14 elevation-6">
+        <div className="h-full flex justify-between items-center container mx-auto bg-slate-700 px-4">
           <Link to="/">
-            <HomeIcon className="w-8 h-8 text-black" />
+            <HomeIcon className="w-8 h-8 text-white" />
           </Link>
           <button
             onClick={() => {
               console.log("Create ");
             }}>
-            <PlusIcon className="w-10 h-10" />
+            <PlusIcon className="w-10 h-10 text-white" />
           </button>
         </div>
       </div>
 
-      <div className="container mx-auto">
+      <div className="h-10"></div>
+
+      <div className="container mx-auto px-4">
         {data.map((item) => {
           return (
-            <div key={item.id}>
-              <Link
-                className="flex items-center justify-between rounded bg-blue-500"
-                to={`/project/${item.id}`}>
-                <span className="text-left max-w-[75%] truncate text-lg ml-4">
-                  {item.name}
-                </span>
-                <ChevronRightIcon className="w-12 h-12" />
-              </Link>
-            </div>
+            <Link
+              className="flex items-center justify-between rounded bg-purple-500 hover:bg-purple-400 elevation-4"
+              to={`/project/${item.id}`}
+              key={item.id}>
+              <span className="text-left max-w-[75%] truncate text-lg ml-4 text-white">
+                {item.name}
+              </span>
+              <ChevronRightIcon className="w-12 h-12 text-white" />
+            </Link>
           );
         })}
       </div>
@@ -109,27 +112,32 @@ const ProjectPage = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white h-10">
-        <div className="container mx-auto bg-pink-200 h-full flex justify-between items-center px-2">
+      <div className="bg-white h-14 elevation-6">
+        <div className="h-full flex justify-between items-center container mx-auto bg-slate-700 px-4">
           <Link to="/">
-            <HomeIcon className="w-8 h-8 text-black" />
+            <ArrowLeftIcon className="w-8 h-8 text-white" />
           </Link>
+
+          <p className="text-white text-lg">{data.project.name}</p>
           <button
             onClick={() => {
-              const name = prompt("List Name");
+              const name = prompt("List name");
               if (name) {
                 createList.mutate(name);
               }
             }}>
-            <PlusIcon className="w-10 h-10" />
+            <PlusIcon className="w-10 h-10 text-white" />
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 container mx-auto">
-        <p className="text-white">Project: {data.project.name}</p>
+      <div className="h-10"></div>
+
+      <div className="flex flex-col gap-2 container mx-auto px-2">
         {data.lists.map((list) => {
-          return <ProjectList key={list} listId={list} />;
+          return (
+            <ProjectList key={list} projectId={data.project.id} listId={list} />
+          );
         })}
       </div>
     </div>
