@@ -1,5 +1,4 @@
 import {
-  ChevronLeftIcon,
   ChevronRightIcon,
   HomeIcon,
   PlusIcon,
@@ -22,23 +21,13 @@ import ProjectList from "./components/ProjectList";
 import { pb } from "./api/pocketbase";
 
 // TODO(patrik):
-//   - Page Transition Animation
-//   - Modal Animation
-//
-//   - Todos:
-//     - Fetch
-//     - Create
-//     - Edit
-//     - Delete
-//   - Folders:
-//     - Fetch
-//     - Create
-//     - Edit
-//     - Delete
-//
-//   - Style Cleanup
-//   - Mobile
-//   - Desktop
+//  - Page Transition
+//  - Modal for creating new projects
+//  - Modal for creating new lists
+//  - Modal for creating new list items
+//  - Edit Projects
+//  - Edit Lists
+//  - Edit List Items
 
 const client = new QueryClient();
 
