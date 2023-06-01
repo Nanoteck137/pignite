@@ -31,10 +31,13 @@ import Dropdown from "./components/Dropdown";
 import ConfirmModal from "./components/ConfirmModal";
 
 // TODO(patrik):
-//  - Modal for creating new projects
-//  - Modal for creating new lists
+//  - Edit Project
+//  - Edit List Item
+//  - Edit List
 //  - Modal for creating new list items
 //  - Cleanup
+//  - Fix desktop
+//  - Maybe add a tooltip for project name when its too long or restrict the number of characters
 
 const client = new QueryClient();
 
@@ -102,13 +105,13 @@ const HomePage = () => {
         {data.map((item) => {
           return (
             <Link
-              className="flex items-center justify-between rounded bg-purple-500 hover:bg-purple-400 elevation-4"
+              className="flex items-center justify-between rounded bg-purple-500 hover:bg-purple-400 elevation-4 p-2"
               to={`/project/${item.id}`}
               key={item.id}>
-              <span className="text-left max-w-[75%] truncate text-lg ml-4 text-white">
+              <span className="flex-grow text-left text-lg text-white ml-2">
                 {item.name}
               </span>
-              <ChevronRightIcon className="w-12 h-12 text-white" />
+              <ChevronRightIcon className="min-w-[3rem] h-12 text-white" />
             </Link>
           );
         })}
@@ -165,7 +168,10 @@ const ProjectPage = () => {
             <ArrowLeftIcon className="w-8 h-8 text-white" />
           </Link>
 
-          <p className="text-white text-lg">{data.project.name}</p>
+          <p className="truncate text-white text-lg px-4">
+            {data.project.name}
+          </p>
+
           <Dropdown
             iconSize="8"
             items={[
