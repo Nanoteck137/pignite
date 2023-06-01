@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ListItem, ListWithItems } from "../api/api";
 import { pb } from "../api/pocketbase";
+import { Menu } from "@headlessui/react";
+import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 
 interface ListItemProps {
   item: ListItem;
@@ -35,8 +37,10 @@ const ViewListItem = ({ item }: ListItemProps) => {
   });
 
   return (
-    <div className="bg-pink-400 py-2 mx-2 rounded" key={item.id}>
-      <label className="flex items-center ml-2">
+    <div
+      className="flex justify-between items-center rounded bg-pink-400 p-2 mx-2"
+      key={item.id}>
+      <label className="flex items-center">
         <input
           checked={item.done}
           className="w-5 h-5 rounded-full focus:ring-0 focus:ring-offset-0"
@@ -45,6 +49,24 @@ const ViewListItem = ({ item }: ListItemProps) => {
         />
         <span className="ml-1">{item.name}</span>
       </label>
+
+      <Menu className="relative" as="div">
+        <Menu.Button className="flex items-center" as="div">
+          <EllipsisVerticalIcon className="w-6 h-6" />
+        </Menu.Button>
+        <Menu.Items className="flex flex-col gap-2 absolute right-1 w-36 z-50 rounded bg-pink-100 p-2">
+          <Menu.Item>
+            <button className="px-2 py-1 rounded bg-green-300 hover:bg-green-200">
+              Edit
+            </button>
+          </Menu.Item>
+          <Menu.Item>
+            <button className="px-2 py-1 rounded bg-green-300 hover:bg-green-200">
+              Delete
+            </button>
+          </Menu.Item>
+        </Menu.Items>
+      </Menu>
     </div>
   );
 };
