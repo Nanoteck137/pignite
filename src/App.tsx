@@ -15,14 +15,15 @@ import {
   Link,
   Route,
   Routes,
+  useLocation,
   useParams,
 } from "react-router-dom";
 import { getProjectForPage, getProjects } from "./api/api";
 import ProjectList from "./components/ProjectList";
 import { pb } from "./api/pocketbase";
+import { AnimatePresence, motion } from "framer-motion";
 
 // TODO(patrik):
-//  - Page Transition
 //  - Modal for creating new projects
 //  - Modal for creating new lists
 //  - Modal for creating new list items
@@ -34,12 +35,21 @@ const App = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={client}>
-        <Routes>
-          <Route index element={<HomePage />} />
-          <Route path="/project/:id" element={<ProjectPage />} />
-        </Routes>
+        <PageRoutes />
       </QueryClientProvider>
     </BrowserRouter>
+  );
+};
+
+const PageRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route index element={<HomePage />} />
+        <Route path="/project/:id" element={<ProjectPage />} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 
@@ -53,7 +63,10 @@ const HomePage = () => {
   if (isLoading) return <p className="text-white">Loading...</p>;
 
   return (
-    <div>
+    <motion.div
+      initial={{ x: "-100%" }}
+      animate={{ x: "0" }}
+      exit={{ x: "-100%" }}>
       <div className="bg-white h-14 elevation-6">
         <div className="h-full flex justify-between items-center container mx-auto bg-slate-700 px-4">
           <Link to="/">
@@ -85,7 +98,7 @@ const HomePage = () => {
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -108,7 +121,11 @@ const ProjectPage = () => {
   if (isLoading) return <p className="text-white">Loading...</p>;
 
   return (
-    <div className="w-full">
+    <motion.div
+      className="w-full"
+      initial={{ x: "-100%" }}
+      animate={{ x: "0" }}
+      exit={{ x: "-100%" }}>
       <div className="bg-white h-14 elevation-6">
         <div className="h-full flex justify-between items-center container mx-auto bg-slate-700 px-4">
           <Link to="/">
@@ -137,7 +154,7 @@ const ProjectPage = () => {
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
