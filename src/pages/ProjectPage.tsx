@@ -20,7 +20,6 @@ import ConfirmModal from "../components/ConfirmModal";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { Disclosure } from "@headlessui/react";
-import ViewListItem from "../components/ViewListItem";
 
 interface ListItemProps {
   item: ListItem;
