@@ -10,18 +10,21 @@ export type DropdownItem = {
 };
 
 interface DropdownProps {
+  iconSize?: string;
   items: DropdownItem[];
 }
 
 const Dropdown = (props: DropdownProps) => {
-  const { items } = props;
+  const { iconSize, items } = props;
 
   return (
     <Menu className="relative" as="div">
       <Menu.Button className="flex items-center" as="div">
-        <EllipsisVerticalIcon className="w-6 h-6 text-white" />
+        <EllipsisVerticalIcon
+          className={`w-${iconSize || "6"} h-${iconSize || "6"} text-white`}
+        />
       </Menu.Button>
-      <Menu.Items className="flex flex-col gap-2 absolute right-1 min-w-max z-50 rounded bg-slate-500 elevation-4 p-2">
+      <Menu.Items className="flex flex-col gap-2 absolute right-1 min-w-max z-50 rounded bg-slate-500 elevation-4 p-4">
         {items.map((item, i) => {
           let itemColor = "bg-slate-700 hover:bg-gray-600";
           if (item.type && item.type == "red") {

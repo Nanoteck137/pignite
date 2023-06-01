@@ -9,6 +9,8 @@ import ViewListItem from "./ViewListItem";
 import { getListWithItems } from "../api/api";
 import { pb } from "../api/pocketbase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import ConfirmModal from "./ConfirmModal";
+import { useState } from "react";
 
 interface ProjectListProps {
   projectId: string;
@@ -17,6 +19,8 @@ interface ProjectListProps {
 
 const ProjectList = (props: ProjectListProps) => {
   const { projectId, listId } = props;
+
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const client = useQueryClient();
 
@@ -40,56 +44,66 @@ const ProjectList = (props: ProjectListProps) => {
   if (isLoading) return <p className="text-white">Loading...</p>;
 
   return (
-    <Disclosure
-      className="rounded elevation-4 bg-slate-700 px-2"
-      as="div"
-      key={data.id}>
-      {({ open }) => (
-        <>
-          <div className="flex items-center">
-            <Disclosure.Button className="flex justify-between items-center w-full py-2">
-              <div className="flex items-center">
-                <ChevronUpIcon
-                  className={`w-6 h-6 text-white transition-transform duration-200 ${
-                    open ? "" : "rotate-180"
-                  }`}
-                />
-                <span className="text-white">{data.name}</span>
-              </div>
-            </Disclosure.Button>
-          </div>
-
-          <Disclosure.Panel className="flex flex-col gap-1 pb-2">
-            <div className="flex gap-2">
-              <button
-                className="flex items-center flex-grow bg-purple-500 rounded py-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const name = prompt("New item name");
-                  if (name) {
-                    createListItem.mutate(name);
-                  }
-                }}>
-                <PlusIcon className="w-8 h-8 text-white" />
-                <span className="text-white">New Item</span>
-              </button>
-              <button className="bg-yellow-500 rounded px-2">
-                <PencilSquareIcon className="w-6 h-6" />
-              </button>
-              <button
-                className="bg-red-500 rounded px-2"
-                onClick={() => deleteList.mutate()}>
-                <TrashIcon className="w-6 h-6" />
-              </button>
+    <>
+      <Disclosure
+        className="rounded elevation-4 bg-slate-700 px-2"
+        as="div"
+        key={data.id}>
+        {({ open }) => (
+          <>
+            <div className="flex items-center">
+              <Disclosure.Button className="flex justify-between items-center w-full py-2">
+                <div className="flex items-center">
+                  <ChevronUpIcon
+                    className={`w-6 h-6 text-white transition-transform duration-200 ${
+                      open ? "" : "rotate-180"
+                    }`}
+                  />
+                  <span className="text-white">{data.name}</span>
+                </div>
+              </Disclosure.Button>
             </div>
 
-            {data.items.map((item) => {
-              return <ViewListItem key={item.id} item={item} />;
-            })}
-          </Disclosure.Panel>
-        </>
-      )}
-    </Disclosure>
+            <Disclosure.Panel className="flex flex-col gap-1 pb-2">
+              <div className="flex gap-2">
+                <button
+                  className="flex items-center flex-grow bg-purple-500 rounded py-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const name = prompt("New item name");
+                    if (name) {
+                      createListItem.mutate(name);
+                    }
+                  }}>
+                  <PlusIcon className="w-8 h-8 text-white" />
+                  <span className="text-white">New Item</span>
+                </button>
+                <button className="bg-yellow-500 rounded px-2">
+                  <PencilSquareIcon className="w-6 h-6" />
+                </button>
+                <button
+                  className="bg-red-500 rounded px-2"
+                  onClick={() => setDeleteModalOpen(true)}>
+                  <TrashIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              {data.items.map((item) => {
+                return <ViewListItem key={item.id} item={item} />;
+              })}
+            </Disclosure.Panel>
+          </>
+        )}
+      </Disclosure>
+
+      <ConfirmModal
+        open={isDeleteModalOpen}
+        title="Are you sure?"
+        desc="You're about to delete the list!"
+        cancel={() => setDeleteModalOpen(false)}
+        confirm={() => deleteList.mutate()}
+      />
+    </>
   );
 };
 

@@ -2,7 +2,9 @@ import {
   ArrowLeftIcon,
   ChevronRightIcon,
   HomeIcon,
+  PencilSquareIcon,
   PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/20/solid";
 import {
   QueryClient,
@@ -16,12 +18,18 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate,
   useParams,
 } from "react-router-dom";
 import { getProjectForPage, getProjects } from "./api/api";
 import ProjectList from "./components/ProjectList";
 import { pb } from "./api/pocketbase";
 import { AnimatePresence, motion } from "framer-motion";
+import { Dialog } from "@headlessui/react";
+import { useRef, useState } from "react";
+import CreateModal from "./components/CreateModal";
+import Dropdown from "./components/Dropdown";
+import ConfirmModal from "./components/ConfirmModal";
 
 // TODO(patrik):
 //  - Modal for creating new projects
@@ -54,9 +62,17 @@ const PageRoutes = () => {
 };
 
 const HomePage = () => {
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+
   const { data, isError, isLoading } = useQuery({
     queryKey: ["projects"],
     queryFn: getProjects,
+  });
+
+  const createProject = useMutation({
+    mutationFn: (name: string) =>
+      pb.collection("projects").create({ name, color: "#ff00ff" }),
+    onSettled: () => client.invalidateQueries(["projects"]),
   });
 
   if (isError) return <p className="text-white">Error</p>;
@@ -74,7 +90,7 @@ const HomePage = () => {
           </Link>
           <button
             onClick={() => {
-              console.log("Create ");
+              setCreateModalOpen(true);
             }}>
             <PlusIcon className="w-10 h-10 text-white" />
           </button>
@@ -83,7 +99,7 @@ const HomePage = () => {
 
       <div className="h-10"></div>
 
-      <div className="container mx-auto px-4">
+      <div className="flex flex-col gap-2 container mx-auto px-4">
         {data.map((item) => {
           return (
             <Link
@@ -98,12 +114,24 @@ const HomePage = () => {
           );
         })}
       </div>
+
+      <CreateModal
+        title="New Project"
+        open={isCreateModalOpen}
+        close={() => setCreateModalOpen(false)}
+        create={(name) => createProject.mutate(name)}
+      />
     </motion.div>
   );
 };
 
 const ProjectPage = () => {
   const { id } = useParams();
+
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+  const [isConfirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   const { data, isError, isLoading } = useQuery({
     queryKey: ["project", id],
@@ -115,6 +143,12 @@ const ProjectPage = () => {
     mutationFn: (name: string) =>
       pb.collection("lists").create({ name, project: id }),
     onSettled: () => client.invalidateQueries(["project", id]),
+  });
+
+  const deleteProject = useMutation({
+    mutationFn: () => pb.collection("projects").delete(id || ""),
+    onSuccess: () => navigate("/"),
+    onSettled: () => client.invalidateQueries(["projects"]),
   });
 
   if (isError) return <p className="text-white">Error</p>;
@@ -133,15 +167,26 @@ const ProjectPage = () => {
           </Link>
 
           <p className="text-white text-lg">{data.project.name}</p>
-          <button
-            onClick={() => {
-              const name = prompt("List name");
-              if (name) {
-                createList.mutate(name);
-              }
-            }}>
-            <PlusIcon className="w-10 h-10 text-white" />
-          </button>
+          <Dropdown
+            iconSize="8"
+            items={[
+              {
+                name: "New List",
+                icon: <PlusIcon className="w-6 h-6" />,
+                onClick: () => setCreateModalOpen(true),
+              },
+              {
+                name: "Edit Project",
+                icon: <PencilSquareIcon className="w-6 h-6" />,
+              },
+              {
+                name: "Delete Project",
+                type: "red",
+                icon: <TrashIcon className="w-6 h-6" />,
+                onClick: () => setConfirmDeleteModalOpen(true),
+              },
+            ]}
+          />
         </div>
       </div>
 
@@ -154,6 +199,26 @@ const ProjectPage = () => {
           );
         })}
       </div>
+
+      <ConfirmModal
+        open={isConfirmDeleteModalOpen}
+        title="Are you sure?"
+        desc="You are about to delete the project!"
+        cancelTitle="Cancel"
+        confirmTitle="Delete"
+        cancel={() => setConfirmDeleteModalOpen(false)}
+        confirm={() => {
+          deleteProject.mutate();
+          setConfirmDeleteModalOpen(false);
+        }}
+      />
+
+      <CreateModal
+        title="New List"
+        open={isCreateModalOpen}
+        close={() => setCreateModalOpen(false)}
+        create={(name) => createList.mutate(name)}
+      />
     </motion.div>
   );
 };
