@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ListItem,
@@ -20,6 +20,7 @@ import ConfirmModal from "../components/ConfirmModal";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { Disclosure } from "@headlessui/react";
+import NewConfirmModal from "../components/NewConfirmModal";
 
 interface ListItemProps {
   item: ListItem;
@@ -200,7 +201,7 @@ const ProjectPage = () => {
   const { id } = useParams();
 
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
-  const [isConfirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
+  const deleteModal = useRef<HTMLDialogElement>(null);
 
   const navigate = useNavigate();
 
@@ -259,7 +260,8 @@ const ProjectPage = () => {
                 name: "Delete Project",
                 type: "red",
                 icon: <TrashIcon className="w-6 h-6" />,
-                onClick: () => setConfirmDeleteModalOpen(true),
+                onClick: () =>
+                  deleteModal.current && deleteModal.current.showModal(),
               },
             ]}
           />
@@ -276,16 +278,16 @@ const ProjectPage = () => {
         })}
       </div>
 
-      <ConfirmModal
-        open={isConfirmDeleteModalOpen}
+      <NewConfirmModal
+        ref={deleteModal}
         title="Are you sure?"
         desc="You are about to delete the project!"
-        cancelTitle="Cancel"
-        confirmTitle="Delete"
-        cancel={() => setConfirmDeleteModalOpen(false)}
+        cancel={() => {
+          deleteModal.current && deleteModal.current.close();
+        }}
         confirm={() => {
           deleteProject.mutate();
-          setConfirmDeleteModalOpen(false);
+          deleteModal.current && deleteModal.current.close();
         }}
       />
 

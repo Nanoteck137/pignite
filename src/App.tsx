@@ -22,7 +22,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={client}>
-        <Test />
+        <PageRoutes />
       </QueryClientProvider>
     </BrowserRouter>
   );
