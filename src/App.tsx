@@ -3,9 +3,6 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import HomePage from "./pages/HomePage";
 import ProjectPage from "./pages/ProjectPage";
-import { useRef, useState } from "react";
-import ConfirmModal from "./components/ConfirmModal";
-import NewConfirmModal from "./components/NewConfirmModal";
 
 // TODO(patrik):
 //  - Edit Project
@@ -25,59 +22,6 @@ const App = () => {
         <PageRoutes />
       </QueryClientProvider>
     </BrowserRouter>
-  );
-};
-
-const Test = () => {
-  const [isOpen, setOpen] = useState(false);
-  const dialog = useRef<HTMLDialogElement>(null);
-
-  function openDialog() {
-    if (dialog.current) {
-      dialog.current.showModal();
-    }
-  }
-
-  function closeDialog() {
-    if (dialog.current) {
-      dialog.current.close();
-    }
-  }
-
-  return (
-    <div className="relative">
-      <button
-        className="rounded bg-blue-400 px-3 py-1"
-        onClick={() => setOpen(true)}>
-        Open Old
-      </button>
-
-      <button className="rounded bg-blue-400 px-3 py-1" onClick={openDialog}>
-        Open New
-      </button>
-
-      <ConfirmModal
-        open={isOpen}
-        title="Hello World"
-        cancel={() => setOpen(false)}
-        confirm={() => setOpen(false)}
-      />
-
-      <NewConfirmModal
-        ref={dialog}
-        title="Hello World"
-        desc="Hello World from this very cool modal"
-        cancel={closeDialog}
-        confirm={closeDialog}
-      />
-
-      {/* <dialog ref={dialog} onClick={handleModalOutsideClick}> */}
-      {/*   <p>This is a test for fun</p> */}
-      {/*   <button className="rounded bg-blue-400 px-3 py-1" onClick={closeDialog}> */}
-      {/*     Close */}
-      {/*   </button> */}
-      {/* </dialog> */}
-    </div>
   );
 };
 

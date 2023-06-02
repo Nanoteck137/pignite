@@ -16,7 +16,6 @@ import {
   getProjectForPage,
 } from "../api/api";
 import { pb } from "../api/pocketbase";
-import ConfirmModal from "../components/ConfirmModal";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { Disclosure } from "@headlessui/react";
