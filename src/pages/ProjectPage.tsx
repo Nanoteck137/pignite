@@ -27,6 +27,8 @@ interface ListItemProps {
 }
 
 const ViewListItem = ({ item }: ListItemProps) => {
+  const deleteModal = useRef<HTMLDialogElement>(null);
+
   const client = useQueryClient();
   const markItem = useMutation({
     mutationFn: (done: boolean) =>
@@ -94,9 +96,23 @@ const ViewListItem = ({ item }: ListItemProps) => {
             name: "Delete",
             type: "red",
             icon: <TrashIcon className="w-6 h-6" />,
-            onClick: () => deleteItem.mutate(),
+            onClick: () =>
+              deleteModal.current && deleteModal.current.showModal(),
           },
         ]}
+      />
+
+      <NewConfirmModal
+        ref={deleteModal}
+        title="Are you sure?"
+        desc="You're about to delete the list!"
+        cancel={() => {
+          deleteModal.current && deleteModal.current.close();
+        }}
+        confirm={() => {
+          deleteItem.mutate();
+          deleteModal.current && deleteModal.current.close();
+        }}
       />
     </div>
   );
