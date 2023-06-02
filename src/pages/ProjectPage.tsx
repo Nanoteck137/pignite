@@ -110,7 +110,7 @@ interface ProjectListProps {
 const ProjectList = (props: ProjectListProps) => {
   const { projectId, listId } = props;
 
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const deleteModal = useRef<HTMLDialogElement>(null);
 
   const client = useQueryClient();
 
@@ -173,7 +173,9 @@ const ProjectList = (props: ProjectListProps) => {
                 </button>
                 <button
                   className="bg-red-500 rounded px-2"
-                  onClick={() => setDeleteModalOpen(true)}>
+                  onClick={() =>
+                    deleteModal.current && deleteModal.current.showModal()
+                  }>
                   <TrashIcon className="w-6 h-6" />
                 </button>
               </div>
@@ -186,12 +188,17 @@ const ProjectList = (props: ProjectListProps) => {
         )}
       </Disclosure>
 
-      <ConfirmModal
-        open={isDeleteModalOpen}
+      <NewConfirmModal
+        ref={deleteModal}
         title="Are you sure?"
         desc="You're about to delete the list!"
-        cancel={() => setDeleteModalOpen(false)}
-        confirm={() => deleteList.mutate()}
+        cancel={() => {
+          deleteModal.current && deleteModal.current.close();
+        }}
+        confirm={() => {
+          deleteModal.current && deleteModal.current.close();
+          deleteList.mutate();
+        }}
       />
     </>
   );
