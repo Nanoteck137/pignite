@@ -19,7 +19,8 @@ import { pb } from "../api/pocketbase";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { Disclosure } from "@headlessui/react";
-import NewConfirmModal from "../components/NewConfirmModal";
+import NewConfirmModal from "../components/ConfirmModal";
+import Button from "../components/Button";
 
 interface ListItemProps {
   item: ListItem;
@@ -66,12 +67,12 @@ const ViewListItem = ({ item }: ListItemProps) => {
 
   return (
     <div
-      className="flex justify-between items-center rounded bg-slate-600 p-2 elevation-4"
+      className="flex items-center justify-between rounded bg-slate-600 p-2 elevation-4"
       key={item.id}>
-      <label className="flex items-center flex-grow hover:cursor-pointer">
+      <label className="flex flex-grow items-center hover:cursor-pointer">
         <input
           checked={item.done}
-          className="w-5 h-5 rounded-full text-pink-500 focus:ring-0 focus:ring-offset-0"
+          className="h-5 w-5 rounded-full text-blue-500 focus:ring-0 focus:ring-offset-0"
           type="checkbox"
           onChange={() => markItem.mutate(!item.done)}
         />
@@ -83,7 +84,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
         items={[
           {
             name: "Test",
-            icon: <PencilSquareIcon className="w-6 h-6" />,
+            icon: <PencilSquareIcon className="h-6 w-6" />,
             onClick: () => {
               const name = prompt("New name");
               if (name) {
@@ -94,7 +95,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
           {
             name: "Delete",
             type: "red",
-            icon: <TrashIcon className="w-6 h-6" />,
+            icon: <TrashIcon className="h-6 w-6" />,
             onClick: () =>
               deleteModal.current && deleteModal.current.showModal(),
           },
@@ -151,16 +152,16 @@ const ProjectList = (props: ProjectListProps) => {
   return (
     <>
       <Disclosure
-        className="rounded elevation-4 bg-slate-700 px-2"
+        className="rounded bg-slate-700 px-2 elevation-4"
         as="div"
         key={data.id}>
         {({ open }) => (
           <>
             <div className="flex items-center">
-              <Disclosure.Button className="flex justify-between items-center w-full py-2">
+              <Disclosure.Button className="flex w-full items-center justify-between py-2">
                 <div className="flex items-center">
                   <ChevronUpIcon
-                    className={`w-6 h-6 text-white transition-transform duration-200 ${
+                    className={`h-6 w-6 text-white transition-transform duration-200 ${
                       open ? "" : "rotate-180"
                     }`}
                   />
@@ -171,8 +172,8 @@ const ProjectList = (props: ProjectListProps) => {
 
             <Disclosure.Panel className="flex flex-col gap-1 pb-2">
               <div className="flex gap-2">
-                <button
-                  className="flex items-center flex-grow bg-purple-500 rounded py-1"
+                <Button
+                  className="flex flex-grow items-center"
                   onClick={(e) => {
                     e.stopPropagation();
                     const name = prompt("New item name");
@@ -180,19 +181,20 @@ const ProjectList = (props: ProjectListProps) => {
                       createListItem.mutate(name);
                     }
                   }}>
-                  <PlusIcon className="w-8 h-8 text-white" />
-                  <span className="text-white">New Item</span>
-                </button>
-                <button className="bg-yellow-500 rounded px-2">
-                  <PencilSquareIcon className="w-6 h-6" />
-                </button>
-                <button
-                  className="bg-red-500 rounded px-2"
+                  <PlusIcon className="h-8 w-8" />
+                  <span>New Item</span>
+                </Button>
+                <Button varient="warning" varientStyle="outline">
+                  <PencilSquareIcon className="h-6 w-6" />
+                </Button>
+                <Button
+                  varient="danger"
+                  varientStyle="outline"
                   onClick={() =>
                     deleteModal.current && deleteModal.current.showModal()
                   }>
-                  <TrashIcon className="w-6 h-6" />
-                </button>
+                  <TrashIcon className="h-6 w-6" />
+                </Button>
               </div>
 
               {data.items.map((item) => {
@@ -256,13 +258,13 @@ const ProjectPage = () => {
       initial={{ x: "-100%" }}
       animate={{ x: "0" }}
       exit={{ x: "-100%" }}>
-      <div className="bg-white h-14 elevation-6">
-        <div className="h-full flex justify-between items-center container mx-auto bg-slate-700 px-4">
+      <div className="h-14 bg-white elevation-6">
+        <div className="container mx-auto flex h-full items-center justify-between bg-slate-700 px-4">
           <Link to="/">
-            <ArrowLeftIcon className="w-8 h-8 text-white" />
+            <ArrowLeftIcon className="h-8 w-8 text-white" />
           </Link>
 
-          <p className="truncate text-white text-lg px-4">
+          <p className="truncate px-4 text-lg text-white">
             {data.project.name}
           </p>
 
@@ -271,17 +273,17 @@ const ProjectPage = () => {
             items={[
               {
                 name: "New List",
-                icon: <PlusIcon className="w-6 h-6" />,
+                icon: <PlusIcon className="h-6 w-6" />,
                 onClick: () => setCreateModalOpen(true),
               },
               {
                 name: "Edit Project",
-                icon: <PencilSquareIcon className="w-6 h-6" />,
+                icon: <PencilSquareIcon className="h-6 w-6" />,
               },
               {
                 name: "Delete Project",
                 type: "red",
-                icon: <TrashIcon className="w-6 h-6" />,
+                icon: <TrashIcon className="h-6 w-6" />,
                 onClick: () =>
                   deleteModal.current && deleteModal.current.showModal(),
               },
@@ -292,7 +294,7 @@ const ProjectPage = () => {
 
       <div className="h-10"></div>
 
-      <div className="flex flex-col gap-2 container mx-auto px-2">
+      <div className="container mx-auto flex flex-col gap-2 px-2">
         {data.lists.map((list) => {
           return (
             <ProjectList key={list} projectId={data.project.id} listId={list} />

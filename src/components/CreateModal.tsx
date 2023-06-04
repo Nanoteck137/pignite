@@ -1,5 +1,6 @@
 import { Dialog } from "@headlessui/react";
 import { useRef } from "react";
+import Button from "./Button";
 
 interface CreateModalProps {
   title: string;
@@ -32,8 +33,8 @@ const CreateModal = (props: CreateModalProps) => {
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="flex flex-col w-full max-w-sm rounded bg-slate-700 p-4">
-          <Dialog.Title className="text-white text-2xl">{title}</Dialog.Title>
+        <Dialog.Panel className="flex w-full max-w-sm flex-col rounded bg-slate-700 p-4">
+          <Dialog.Title className="text-2xl text-white">{title}</Dialog.Title>
 
           <div className="h-2"></div>
 
@@ -43,7 +44,7 @@ const CreateModal = (props: CreateModalProps) => {
               submit();
             }}>
             <input
-              className="flex-grow rounded bg-slate-600 text-white placeholder:text-gray-200 px-2 py-0"
+              className="flex-grow rounded bg-slate-600 px-2 py-0 text-white placeholder:text-gray-200"
               type="text"
               placeholder="Name"
               ref={inputRef}
@@ -54,13 +55,14 @@ const CreateModal = (props: CreateModalProps) => {
           <div className="h-6"></div>
 
           <div className="flex justify-end gap-2">
-            <button
-              className="rounded bg-slate-700 hover:bg-slate-600 text-white px-3 py-1"
+            <Button
+              varient={"secondary"}
+              varientStyle="text"
               onClick={closeAndReset}>
               Cancel
-            </button>
+            </Button>
             <button
-              className="rounded bg-purple-400 hover:bg-purple-300 text-black px-3 py-1"
+              className="rounded bg-purple-400 px-3 py-1 text-black hover:bg-purple-300"
               onClick={submit}>
               Create
             </button>

@@ -1,6 +1,8 @@
 import { Menu } from "@headlessui/react";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { ReactNode } from "react";
+import { twJoin } from "tailwind-merge";
+import Button from "./Button";
 
 export type DropdownItem = {
   name: string;
@@ -24,17 +26,20 @@ const Dropdown = (props: DropdownProps) => {
           className={`w-${iconSize || "6"} h-${iconSize || "6"} text-white`}
         />
       </Menu.Button>
-      <Menu.Items className="flex flex-col gap-2 absolute right-1 min-w-max z-50 rounded bg-slate-500 elevation-4 p-4">
+      <Menu.Items className="absolute right-1 z-50 flex min-w-max flex-col gap-2 rounded bg-slate-500 p-4 elevation-4">
         {items.map((item, i) => {
-          let itemColor = "bg-slate-700 hover:bg-gray-600";
-          if (item.type && item.type == "red") {
-            itemColor = "bg-red-600 hover:bg-red-500";
-          }
-
+          const { type = "default" } = item;
           return (
             <Menu.Item key={i}>
-              <button
-                className={`flex px-3 py-2 rounded w-44 ${itemColor} text-white`}
+              <Button
+                varient={type == "red" ? "danger" : "primary"}
+                className="flex w-44 items-center"
+                // className={twJoin(
+                //   "flex w-44 rounded px-2 py-2",
+                //   item.type && item.type == "red"
+                //     ? "bg-red-600 text-white"
+                //     : "bg-slate-700 text-white",
+                // )}
                 onClick={item.onClick}>
                 {item.icon && (
                   <>
@@ -43,24 +48,10 @@ const Dropdown = (props: DropdownProps) => {
                   </>
                 )}
                 <span className="">{item.name}</span>
-              </button>
+              </Button>
             </Menu.Item>
           );
         })}
-
-        {/* <Menu.Item> */}
-        {/*   <div className="flex px-2 py-1 rounded bg-purple-400 text-white"> */}
-        {/*     <PencilSquareIcon className="w-6 h-6" /> */}
-        {/*     <button className="flex-grow">Edit</button> */}
-        {/*   </div> */}
-        {/* </Menu.Item> */}
-        {/* <Menu.Item> */}
-        {/*   <div className="flex px-2 py-1 rounded bg-red-400 text-white"> */}
-        {/*     <TrashIcon className="w-6 h-6" /> */}
-        {/*     <div className="w-2"></div> */}
-        {/*     <button className="">Delete</button> */}
-        {/*   </div> */}
-        {/* </Menu.Item> */}
       </Menu.Items>
     </Menu>
   );

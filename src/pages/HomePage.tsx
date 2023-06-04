@@ -35,33 +35,33 @@ const HomePage = () => {
       initial={{ x: "-100%" }}
       animate={{ x: "0" }}
       exit={{ x: "-100%" }}>
-      <div className="bg-white h-14 elevation-6">
-        <div className="h-full flex justify-between items-center container mx-auto bg-slate-700 px-4">
+      <div className="h-14 bg-white elevation-6">
+        <div className="container mx-auto flex h-full items-center justify-between bg-slate-700 px-4">
           <Link to="/">
-            <HomeIcon className="w-8 h-8 text-white" />
+            <HomeIcon className="h-8 w-8 text-white" />
           </Link>
           <button
             onClick={() => {
               setCreateModalOpen(true);
             }}>
-            <PlusIcon className="w-10 h-10 text-white" />
+            <PlusIcon className="h-10 w-10 text-white" />
           </button>
         </div>
       </div>
 
       <div className="h-10"></div>
 
-      <div className="flex flex-col gap-2 container mx-auto px-4">
+      <div className="container mx-auto flex flex-col gap-2 px-4">
         {data.map((item) => {
           return (
             <Link
-              className="flex items-center justify-between rounded bg-purple-500 hover:bg-purple-400 elevation-4 p-2"
+              className="flex items-center justify-between rounded bg-purple-500 p-2 elevation-4 hover:bg-purple-400"
               to={`/project/${item.id}`}
               key={item.id}>
-              <span className="flex-grow text-left text-lg text-white ml-2">
+              <span className="ml-2 flex-grow text-left text-lg text-white">
                 {item.name}
               </span>
-              <ChevronRightIcon className="min-w-[3rem] h-12 text-white" />
+              <ChevronRightIcon className="h-12 min-w-[3rem] text-white" />
             </Link>
           );
         })}
