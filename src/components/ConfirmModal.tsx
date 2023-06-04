@@ -1,51 +1,41 @@
-import { Dialog } from "@headlessui/react";
+/* eslint-disable react/display-name */
+import { forwardRef } from "react";
+import { handleModalOutsideClick } from "../utils/modal";
+import Button from "./Button";
 
-interface ConfirmModalProps {
+interface NewConfirmModalProps {
   title: string;
   desc?: string;
   cancelTitle?: string;
   confirmTitle?: string;
-  open?: boolean;
-  cancel: () => void;
-  confirm: () => void;
+  cancel?: () => void;
+  confirm?: () => void;
 }
 
-const ConfirmModal = (props: ConfirmModalProps) => {
-  const { title, desc, open, cancelTitle, confirmTitle, cancel, confirm } =
-    props;
+const NewConfirmModal = forwardRef<HTMLDialogElement, NewConfirmModalProps>(
+  (props, ref) => {
+    const { title, desc, cancelTitle, confirmTitle, cancel, confirm } = props;
+    return (
+      <dialog
+        className="w-full max-w-sm rounded bg-slate-700 px-4 py-4"
+        ref={ref}
+        onClick={handleModalOutsideClick}>
+        <h1 className="text-xl text-white">{title}</h1>
+        {desc && <h3 className="text-md text-white">{desc}</h3>}
 
-  return (
-    <Dialog className="relative z-50" open={!!open} onClose={cancel}>
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        <div className="h-6"></div>
 
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="flex flex-col w-full max-w-sm rounded bg-slate-700 px-4 py-4">
-          <Dialog.Title className="text-white text-xl">{title}</Dialog.Title>
-          {desc && (
-            <Dialog.Description className="text-white text-md">
-              {desc}
-            </Dialog.Description>
-          )}
+        <div className="flex justify-end gap-2">
+          <Button varient="secondary" varientStyle="text" onClick={cancel}>
+            {cancelTitle || "Cancel"}
+          </Button>
+          <Button varient="danger" onClick={confirm}>
+            {confirmTitle || "Confirm"}
+          </Button>
+        </div>
+      </dialog>
+    );
+  },
+);
 
-          <div className="h-6"></div>
-
-          <div className="flex justify-end gap-2">
-            <button
-              className="rounded bg-slate-700 hover:bg-slate-600 text-white px-3 py-1"
-              onClick={cancel}>
-              {cancelTitle || "Cancel"}
-            </button>
-
-            <button
-              className="rounded bg-purple-400 hover:bg-purple-300 text-black px-3 py-1"
-              onClick={confirm}>
-              {confirmTitle || "Confirm"}
-            </button>
-          </div>
-        </Dialog.Panel>
-      </div>
-    </Dialog>
-  );
-};
-
-export default ConfirmModal;
+export default NewConfirmModal;
