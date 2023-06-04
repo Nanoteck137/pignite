@@ -2,5 +2,6 @@
   "trailingComma": "all",
   "tabWidth": 2,
   "singleQuote": false,
-  "jsxBracketSameLine": true
+  "jsxBracketSameLine": true,
+  "plugins": ["prettier-plugin-tailwindcss"]
 }
