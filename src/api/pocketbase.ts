@@ -1,4 +1,4 @@
 import PocketBase from "pocketbase";
 
-export const pb = new PocketBase("http://10.28.28.6:8090");
+export const pb = new PocketBase(import.meta.env.VITE_APP_API_URL);
 pb.autoCancellation(false);
