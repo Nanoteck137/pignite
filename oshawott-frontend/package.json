@@ -1,10 +1,13 @@
 {
   "name": "pignite-frontend",
   "version": "0.1.0",
+  "description": "Frontend for the pignite project",
+  "author": "Patrik Millvik Rosenström",
+  "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "vite",
-    "start-net": "vite --host",
+    "dev": "vite --host",
+    "dev-noexpose": "vite",
     "build": "vite build",
     "serve": "vite preview"
   },
