@@ -1,9 +1,17 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { httpBatchLink } from "@trpc/client";
 import { AnimatePresence } from "framer-motion";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import DebugPage from "./pages/Debug";
 import HomePage from "./pages/HomePage";
 import ProjectPage from "./pages/ProjectPage";
-import Button from "./components/Button";
+import { trpc } from "./trpc";
+import { useRef } from "react";
+import { getQueryKey } from "@trpc/react-query";
 
 // TODO(patrik):
 //  - Edit Project
@@ -14,91 +22,24 @@ import Button from "./components/Button";
 //  - Fix desktop
 //  - Maybe add a tooltip for project name when its too long or restrict the number of characters
 
-const client = new QueryClient();
+const queryClient = new QueryClient();
+const trpcClient = trpc.createClient({
+  links: [
+    httpBatchLink({
+      url: "http://localhost:3000/trpc",
+    }),
+  ],
+});
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={client}>
-        <PageRoutes />
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <PageRoutes />
+        </BrowserRouter>
       </QueryClientProvider>
-    </BrowserRouter>
-  );
-};
-
-const ShowComponents = () => {
-  const sizes = ["small", "normal", "large"] as const;
-  const varients = [
-    "primary",
-    "secondary",
-    "success",
-    "danger",
-    "warning",
-  ] as const;
-  const varientStyles = ["normal", "outline", "text"] as const;
-
-  let buttons = [];
-
-  for (let varientStyle of varientStyles) {
-    for (let varient of varients) {
-      for (let size of sizes) {
-        buttons.push({
-          size,
-          varient,
-          varientStyle,
-          label: `${varient}-${size}`,
-        });
-      }
-    }
-  }
-
-  return (
-    <div className="">
-      <div className="grid place-items-center gap-4 sm:grid-cols-3">
-        {buttons.map((button) => {
-          const { varient, varientStyle, size, label } = button;
-          return (
-            <Button
-              className="max-w-fit"
-              varient={varient}
-              varientStyle={varientStyle}
-              size={size}
-              key={`${varient}-${varientStyle}-${size}`}>
-              {label}
-            </Button>
-          );
-        })}
-      </div>
-
-      <div className="h-10"></div>
-
-      <div className="grid place-items-center gap-4 sm:grid-cols-3">
-        {buttons.map((button) => {
-          const { varient, varientStyle, size, label } = button;
-          return (
-            <Button
-              className="w-full"
-              varient={varient}
-              varientStyle={varientStyle}
-              size={size}
-              key={`${varient}-${varientStyle}-${size}-full`}>
-              {label}
-            </Button>
-          );
-        })}
-      </div>
-
-      {/* {sizes.map((size) => { */}
-      {/*   return ( */}
-      {/*     <div className="flex justify-around gap-2" key={size}> */}
-      {/*       {varients.map((varient) => { */}
-      {/*         return ( */}
-      {/*         ); */}
-      {/*       })} */}
-      {/*     </div> */}
-      {/*   ); */}
-      {/* })} */}
-    </div>
+    </trpc.Provider>
   );
 };
 
@@ -109,9 +50,50 @@ const PageRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route index element={<HomePage />} />
         <Route path="/project/:id" element={<ProjectPage />} />
-        <Route path="/debug" element={<ShowComponents />} />
+        <Route path="/debug" element={<DebugPage />} />
+        <Route path="/test" element={<Test />} />
       </Routes>
     </AnimatePresence>
+  );
+};
+
+const Test = () => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const queryClient = useQueryClient();
+  const { data, error, isError, isLoading } = trpc.getAll.useQuery();
+  const createNew = trpc.createNew.useMutation({
+    onSuccess: (data) => console.log(data),
+    onSettled: () => {
+      const queryKey = getQueryKey(trpc.getAll);
+      queryClient.invalidateQueries(queryKey);
+    },
+  });
+
+  if (isError) return <p>Error: {error.message}</p>;
+  if (isLoading) return <p>Loading...</p>;
+
+  return (
+    <div className="flex flex-col text-white">
+      {data.map((item) => {
+        return <p key={item.id}>{item.text}</p>;
+      })}
+
+      <label>
+        <span>Text: </span>
+        <input className="text-black" ref={inputRef} type="text" />
+      </label>
+
+      <button
+        className="bg-blue-400 px-3 py-1"
+        onClick={() => {
+          if (inputRef.current) {
+            createNew.mutate({ text: inputRef.current.value });
+          }
+        }}>
+        Create New
+      </button>
+    </div>
   );
 };
 
