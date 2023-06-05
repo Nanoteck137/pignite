@@ -10,22 +10,22 @@ import { Link } from "react-router-dom";
 import { getProjects } from "../api/api";
 import { pb } from "../api/pocketbase";
 import CreateModal from "../components/CreateModal";
+import { trpc } from "../trpc";
 
 const HomePage = () => {
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const client = useQueryClient();
 
-  const { data, isError, isLoading } = useQuery({
-    queryKey: ["projects"],
-    queryFn: getProjects,
-  });
+  const { data, isError, isLoading } = trpc.project.getAll.useQuery();
 
-  const createProject = useMutation({
-    mutationFn: (name: string) =>
-      pb.collection("projects").create({ name, color: "#ff00ff" }),
-    onSettled: () => client.invalidateQueries(["projects"]),
-  });
+  const createProject = trpc.project.create.useMutation();
+
+  // const createProject = useMutation({
+  //   mutationFn: (name: string) =>
+  //     pb.collection("projects").create({ name, color: "#ff00ff" }),
+  //   onSettled: () => client.invalidateQueries(["projects"]),
+  // });
 
   if (isError) return <p className="text-white">Error</p>;
   if (isLoading) return <p className="text-white">Loading...</p>;
@@ -71,7 +71,7 @@ const HomePage = () => {
         title="New Project"
         open={isCreateModalOpen}
         close={() => setCreateModalOpen(false)}
-        create={(name) => createProject.mutate(name)}
+        create={(name) => createProject.mutate({ name, color: "#ff00ff" })}
       />
     </motion.div>
   );

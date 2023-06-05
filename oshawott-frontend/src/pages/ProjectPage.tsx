@@ -21,6 +21,7 @@ import Dropdown from "../components/Dropdown";
 import { Disclosure } from "@headlessui/react";
 import NewConfirmModal from "../components/ConfirmModal";
 import Button from "../components/Button";
+import { trpc } from "../trpc";
 
 interface ListItemProps {
   item: ListItem;
@@ -231,11 +232,10 @@ const ProjectPage = () => {
 
   const client = useQueryClient();
 
-  const { data, isError, isLoading } = useQuery({
-    queryKey: ["project", id],
-    queryFn: () => getProjectForPage(id || ""),
-    enabled: !!id,
-  });
+  const { data, isError, isLoading } = trpc.project.get.useQuery(
+    { id: id ?? "" },
+    { enabled: !!id },
+  );
 
   const createList = useMutation({
     mutationFn: (name: string) =>
@@ -264,9 +264,7 @@ const ProjectPage = () => {
             <ArrowLeftIcon className="h-8 w-8 text-white" />
           </Link>
 
-          <p className="truncate px-4 text-lg text-white">
-            {data.project.name}
-          </p>
+          <p className="truncate px-4 text-lg text-white">{data.name}</p>
 
           <Dropdown
             iconSize="8"
@@ -295,11 +293,11 @@ const ProjectPage = () => {
       <div className="h-10"></div>
 
       <div className="container mx-auto flex flex-col gap-2 px-2">
-        {data.lists.map((list) => {
-          return (
-            <ProjectList key={list} projectId={data.project.id} listId={list} />
-          );
-        })}
+        {/* {data.lists.map((list) => { */}
+        {/*   return ( */}
+        {/*     <ProjectList key={list} projectId={data.project.id} listId={list} /> */}
+        {/*   ); */}
+        {/* })} */}
       </div>
 
       <NewConfirmModal
