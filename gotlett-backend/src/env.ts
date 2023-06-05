@@ -1,12 +1,10 @@
-import { ZodError, z } from "zod";
+import { z } from "zod";
 
 import path from "path";
 import dotenv from "dotenv";
-dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+dotenv.config({ path: path.resolve(process.cwd(), "./.env") });
 
-const EnvSchema = z.object({
-  TEST: z.string({ required_error: "TEST2 is required" }),
-});
+const EnvSchema = z.object({});
 
 EnvSchema.parse(process.env);
 
