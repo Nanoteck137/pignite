@@ -2,6 +2,9 @@
   "name": "gotlett-backend",
   "version": "0.0.1",
   "description": "Backend for the pignite project",
+  "author": "Patrik Millvik Rosesntröm",
+  "license": "MIT",
+  "private": true,
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
@@ -37,7 +40,5 @@
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
-  },
-  "author": "",
-  "license": "MIT"
+  }
 }
