@@ -2,16 +2,33 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator zod {
-  provider = "zod-prisma-types"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Test {
-  id   String  @id @default(cuid())
-  text String
+model Project {
+  id    String @id @default(cuid())
+  name  String @unique
+  color String
+
+  lists ProjectList[]
+}
+
+model ProjectList {
+  id   String @id @default(cuid())
+  name String
+
+  items ProjectListItem[]
+
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+}
+
+model ProjectListItem {
+  id   String @id @default(cuid())
+  name String
+
+  projectList   ProjectList @relation(fields: [projectListId], references: [id])
+  projectListId String
 }
