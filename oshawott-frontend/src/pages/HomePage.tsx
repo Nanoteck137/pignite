@@ -1,15 +1,15 @@
 import {
+  ChevronRightIcon,
   HomeIcon,
   PlusIcon,
-  ChevronRightIcon,
 } from "@heroicons/react/20/solid";
 import { useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import CreateModal from "../components/CreateModal";
 import { trpc } from "../trpc";
-import { getQueryKey } from "@trpc/react-query";
 
 const HomePage = () => {
   const queryClient = useQueryClient();

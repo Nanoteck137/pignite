@@ -1,21 +1,21 @@
+import { Disclosure } from "@headlessui/react";
 import {
   ArrowLeftIcon,
-  PlusIcon,
-  PencilSquareIcon,
-  TrashIcon,
   ChevronUpIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/20/solid";
 import { useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import Button from "../components/Button";
+import NewConfirmModal from "../components/ConfirmModal";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
-import { Disclosure } from "@headlessui/react";
-import NewConfirmModal from "../components/ConfirmModal";
-import Button from "../components/Button";
 import { RouterOutputs, trpc } from "../trpc";
-import { getQueryKey } from "@trpc/react-query";
 
 type ListItem = RouterOutputs["project"]["list"]["getList"]["items"][number];
 

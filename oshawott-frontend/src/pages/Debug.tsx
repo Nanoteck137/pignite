@@ -11,11 +11,11 @@ const DebugPage = () => {
   ] as const;
   const varientStyles = ["normal", "outline", "text"] as const;
 
-  let buttons = [];
+  const buttons = [];
 
-  for (let varientStyle of varientStyles) {
-    for (let varient of varients) {
-      for (let size of sizes) {
+  for (const varientStyle of varientStyles) {
+    for (const varient of varients) {
+      for (const size of sizes) {
         buttons.push({
           size,
           varient,
