@@ -8,6 +8,9 @@ import { appRouter } from "./api/router";
 import { PrismaClient } from "@prisma/client";
 import { Context } from "./trpc";
 import path from "path";
+import helmet from "helmet";
+import morgan from "morgan";
+import env from "./env";
 
 const prismaClient = new PrismaClient();
 
@@ -20,6 +23,8 @@ function createContextInner(): Context {
 const app = express();
 
 app.use(cors());
+app.use(helmet());
+app.use(morgan(env.NODE_ENV == "development" ? "dev" : "common"));
 
 app.use(express.static(path.join(process.cwd(), "public")));
 
