@@ -3,6 +3,7 @@ import { publicProcedure, router } from "../../trpc";
 import { ProjectSchema } from "../../model/project";
 import { TRPCError } from "@trpc/server";
 import listRouter from "./list/router";
+import { WithId } from "../../model/id";
 
 const projectRouter = router({
   list: listRouter,
@@ -17,10 +18,11 @@ const projectRouter = router({
   get: publicProcedure
     .meta({ openapi: { method: "GET", path: "/project" } })
     .input(z.object({ id: z.string() }))
-    .output(ProjectSchema)
+    .output(ProjectSchema.merge(z.object({ lists: z.array(WithId) })))
     .query(async ({ input, ctx }) => {
       const result = await ctx.prisma.project.findUnique({
         where: { id: input.id },
+        include: { lists: { select: { id: true } } },
       });
       if (!result)
         throw new TRPCError({

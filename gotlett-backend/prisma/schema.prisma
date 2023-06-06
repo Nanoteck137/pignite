@@ -26,9 +26,10 @@ model ProjectList {
 }
 
 model ProjectListItem {
-  id   String @id @default(cuid())
+  id   String  @id @default(cuid())
   name String
+  done Boolean
 
-  projectList   ProjectList @relation(fields: [projectListId], references: [id])
-  projectListId String
+  list   ProjectList @relation(fields: [listId], references: [id])
+  listId String
 }
