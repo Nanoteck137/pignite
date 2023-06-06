@@ -24,7 +24,7 @@ const app = express();
 
 app.use(cors());
 app.use(helmet());
-app.use(morgan(env.NODE_ENV == "development" ? "dev" : "common"));
+app.use(morgan(env.NODE_ENV == "development" ? "dev" : "combined"));
 
 app.use(express.static(path.join(process.cwd(), "public")));
 
