@@ -7,6 +7,7 @@ COPY ./gotlett-backend/package*.json ./
 RUN npm install
 
 COPY ./gotlett-backend ./
+COPY ./.env ./
 RUN npm run build
 
 # Frontend
@@ -18,6 +19,7 @@ COPY ./oshawott-frontend/package*.json ./
 RUN npm install
 
 COPY ./oshawott-frontend ./
+COPY ./.env ./
 RUN npm run build
 
 # Deployment
@@ -33,6 +35,7 @@ RUN npm ci --omit=dev
 
 COPY --from=backend-build /app/backend/dist ./dist
 COPY --from=frontend-build /app/frontend/dist ./public
+COPY ./.env ./
 
 RUN npx prisma generate 
 
