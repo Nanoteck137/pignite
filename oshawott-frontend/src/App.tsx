@@ -16,11 +16,16 @@ import { trpc } from "./trpc";
 //  - Fix desktop
 //  - Maybe add a tooltip for project name when its too long or restrict the number of characters
 
+let apiUrl = window.location.origin;
+if (import.meta.env.DEV && import.meta.env.VITE_APP_API_URL) {
+  apiUrl = import.meta.env.VITE_APP_API_URL;
+}
+
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: `${window.location.origin}/trpc`,
+      url: `${apiUrl}/trpc`,
     }),
   ],
 });
