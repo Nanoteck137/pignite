@@ -4,12 +4,9 @@ import path from "path";
 import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(process.cwd(), "./.env") });
 
-const EnvSchema = z.object({});
+const EnvSchema = z.object({
+  NODE_ENV: z.enum(["development", "production"]).default("development"),
+});
 
-EnvSchema.parse(process.env);
-
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv extends z.infer<typeof EnvSchema> {}
-  }
-}
+const env = EnvSchema.parse(process.env);
+export default env;
