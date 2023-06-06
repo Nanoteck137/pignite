@@ -2,8 +2,11 @@ import { z } from "zod";
 import { publicProcedure, router } from "../../trpc";
 import { ProjectSchema } from "../../model/project";
 import { TRPCError } from "@trpc/server";
+import listRouter from "./list/router";
 
 const projectRouter = router({
+  list: listRouter,
+
   getAll: publicProcedure
     .meta({ openapi: { method: "GET", path: "/project/all" } })
     .input(z.void())
