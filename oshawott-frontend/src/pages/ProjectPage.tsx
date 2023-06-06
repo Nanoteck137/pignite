@@ -17,6 +17,7 @@ import { Disclosure } from "@headlessui/react";
 import NewConfirmModal from "../components/ConfirmModal";
 import Button from "../components/Button";
 import { RouterOutputs, trpc } from "../trpc";
+import { getQueryKey } from "@trpc/react-query";
 
 type ListItem = RouterOutputs["project"]["list"]["getList"]["items"][number];
 
@@ -28,39 +29,41 @@ const ViewListItem = ({ item }: ListItemProps) => {
   const deleteModal = useRef<HTMLDialogElement>(null);
 
   const client = useQueryClient();
-  const markItem = useMutation({
-    mutationFn: (done: boolean) =>
-      pb.collection("list_items").update(item.id, { done }),
-    onMutate: async (done) => {
-      await client.cancelQueries(["list", item.listId]);
-
-      const oldData = client.getQueryData<ListWithItems>(["list", item.listId]);
-      client.setQueryData<ListWithItems>(["list", item.listId], (old) => {
-        if (old) {
-          const oldItem = old.items.find((oldItem) => oldItem.id === item.id);
-          if (oldItem) {
-            oldItem.done = done;
-          }
-        }
-        return old;
-      });
-      return { oldData };
+  const editItem = trpc.project.list.editItem.useMutation({
+    onSettled: () => {
+      const queryKey = getQueryKey(trpc.project.list.getList);
+      client.invalidateQueries(queryKey);
     },
-    onError: (_err, _done, context) => {
-      client.setQueryData(["list", item.listId], context?.oldData);
+  });
+  // const markItem = useMutation({
+  //   mutationFn: (done: boolean) =>
+  //     pb.collection("list_items").update(item.id, { done }),
+  //   onMutate: async (done) => {
+  //     await client.cancelQueries(["list", item.listId]);
+  //
+  //     const oldData = client.getQueryData<ListWithItems>(["list", item.listId]);
+  //     client.setQueryData<ListWithItems>(["list", item.listId], (old) => {
+  //       if (old) {
+  //         const oldItem = old.items.find((oldItem) => oldItem.id === item.id);
+  //         if (oldItem) {
+  //           oldItem.done = done;
+  //         }
+  //       }
+  //       return old;
+  //     });
+  //     return { oldData };
+  //   },
+  //   onError: (_err, _done, context) => {
+  //     client.setQueryData(["list", item.listId], context?.oldData);
+  //   },
+  //   onSettled: () => client.invalidateQueries(["list", item.listId]),
+  // });
+
+  const deleteItem = trpc.project.list.deleteItem.useMutation({
+    onSettled: () => {
+      const queryKey = getQueryKey(trpc.project.list.getList);
+      client.invalidateQueries(queryKey);
     },
-    onSettled: () => client.invalidateQueries(["list", item.listId]),
-  });
-
-  const editItemName = useMutation({
-    mutationFn: (name: string) =>
-      pb.collection("list_items").update(item.id, { name }),
-    onSettled: () => client.invalidateQueries(["list", item.listId]),
-  });
-
-  const deleteItem = useMutation({
-    mutationFn: () => pb.collection("list_items").delete(item.id),
-    onSettled: () => client.invalidateQueries(["list", item.listId]),
   });
 
   return (
@@ -72,7 +75,9 @@ const ViewListItem = ({ item }: ListItemProps) => {
           checked={item.done}
           className="h-5 w-5 rounded-full text-blue-500 focus:ring-0 focus:ring-offset-0"
           type="checkbox"
-          onChange={() => markItem.mutate(!item.done)}
+          onChange={() =>
+            editItem.mutate({ id: item.id, data: { done: !item.done } })
+          }
         />
         <div className="w-1"></div>
         <span className="text-white">{item.name}</span>
@@ -86,7 +91,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
             onClick: () => {
               const name = prompt("New name");
               if (name) {
-                editItemName.mutate(name);
+                editItem.mutate({ id: item.id, data: { name: name } });
               }
             },
           },
@@ -108,7 +113,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
           deleteModal.current && deleteModal.current.close();
         }}
         confirm={() => {
-          deleteItem.mutate();
+          deleteItem.mutate({ id: item.id });
           deleteModal.current && deleteModal.current.close();
         }}
       />
@@ -117,30 +122,34 @@ const ViewListItem = ({ item }: ListItemProps) => {
 };
 
 interface ProjectListProps {
-  projectId: string;
   listId: string;
 }
 
 const ProjectList = (props: ProjectListProps) => {
-  const { projectId, listId } = props;
+  const { listId } = props;
 
   const deleteModal = useRef<HTMLDialogElement>(null);
 
-  const client = useQueryClient();
+  const queryClient = useQueryClient();
 
   const { data, isError, isLoading } = trpc.project.list.getList.useQuery({
     id: listId,
   });
 
-  const createListItem = useMutation({
-    mutationFn: (name: string) =>
-      pb.collection("list_items").create({ name, list: listId }),
-    onSettled: () => client.invalidateQueries(["list", listId]),
+  const newItem = trpc.project.list.createItem.useMutation({
+    onSettled: () => {
+      const queryKey = getQueryKey(trpc.project.list.getList, { id: listId });
+      queryClient.invalidateQueries(queryKey);
+    },
   });
 
-  const deleteList = useMutation({
-    mutationFn: () => pb.collection("lists").delete(listId),
-    onSettled: () => client.invalidateQueries(["project", projectId]),
+  const deleteList = trpc.project.list.delete.useMutation({
+    onSettled: () => {
+      if (data) {
+        const queryKey = getQueryKey(trpc.project.get, { id: data.projectId });
+        queryClient.invalidateQueries(queryKey);
+      }
+    },
   });
 
   if (isError) return <p className="text-white">Error</p>;
@@ -175,7 +184,8 @@ const ProjectList = (props: ProjectListProps) => {
                     e.stopPropagation();
                     const name = prompt("New item name");
                     if (name) {
-                      createListItem.mutate(name);
+                      newItem.mutate({ name, listId: data.id });
+                      // createListItem.mutate(name);
                     }
                   }}>
                   <PlusIcon className="h-8 w-8" />
@@ -210,8 +220,8 @@ const ProjectList = (props: ProjectListProps) => {
           deleteModal.current && deleteModal.current.close();
         }}
         confirm={() => {
+          deleteList.mutate({ id: data.id });
           deleteModal.current && deleteModal.current.close();
-          deleteList.mutate();
         }}
       />
     </>
@@ -226,24 +236,35 @@ const ProjectPage = () => {
 
   const navigate = useNavigate();
 
-  const client = useQueryClient();
+  const queryClient = useQueryClient();
 
   const { data, isError, isLoading } = trpc.project.get.useQuery(
     { id: id ?? "" },
     { enabled: !!id },
   );
 
-  const createList = useMutation({
-    mutationFn: (name: string) =>
-      pb.collection("lists").create({ name, project: id }),
-    onSettled: () => client.invalidateQueries(["project", id]),
+  const createList = trpc.project.list.create.useMutation({
+    onSettled: () => {
+      if (data) {
+        const queryKey = getQueryKey(trpc.project.get, { id: data.id });
+        queryClient.invalidateQueries(queryKey);
+      }
+    },
   });
 
-  const deleteProject = useMutation({
-    mutationFn: () => pb.collection("projects").delete(id || ""),
+  const deleteProject = trpc.project.delete.useMutation({
     onSuccess: () => navigate("/"),
-    onSettled: () => client.invalidateQueries(["projects"]),
+    onSettled: () => {
+      const queryKey = getQueryKey(trpc.project.getAll);
+      queryClient.invalidateQueries(queryKey);
+    },
   });
+
+  // const deleteProject = useMutation({
+  //   mutationFn: () => pb.collection("projects").delete(id || ""),
+  //   onSuccess: () => navigate("/"),
+  //   onSettled: () => queryClient.invalidateQueries(["projects"]),
+  // });
 
   if (isError) return <p className="text-white">Error</p>;
   if (isLoading) return <p className="text-white">Loading...</p>;
@@ -290,9 +311,7 @@ const ProjectPage = () => {
 
       <div className="container mx-auto flex flex-col gap-2 px-2">
         {data.lists.map((list) => {
-          return (
-            <ProjectList key={list.id} projectId={data.id} listId={list.id} />
-          );
+          return <ProjectList key={list.id} listId={list.id} />;
         })}
       </div>
 
@@ -304,7 +323,7 @@ const ProjectPage = () => {
           deleteModal.current && deleteModal.current.close();
         }}
         confirm={() => {
-          deleteProject.mutate();
+          deleteProject.mutate({ id: data.id });
           deleteModal.current && deleteModal.current.close();
         }}
       />
@@ -313,7 +332,7 @@ const ProjectPage = () => {
         title="New List"
         open={isCreateModalOpen}
         close={() => setCreateModalOpen(false)}
-        create={(name) => createList.mutate(name)}
+        create={(name) => createList.mutate({ name, projectId: data.id })}
       />
     </motion.div>
   );

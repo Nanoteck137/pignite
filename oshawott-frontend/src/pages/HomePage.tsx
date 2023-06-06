@@ -11,21 +11,21 @@ import { getProjects } from "../api/api";
 import { pb } from "../api/pocketbase";
 import CreateModal from "../components/CreateModal";
 import { trpc } from "../trpc";
+import { getQueryKey } from "@trpc/react-query";
 
 const HomePage = () => {
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
-  const client = useQueryClient();
+  const queryClient = useQueryClient();
 
   const { data, isError, isLoading } = trpc.project.getAll.useQuery();
 
-  const createProject = trpc.project.create.useMutation();
-
-  // const createProject = useMutation({
-  //   mutationFn: (name: string) =>
-  //     pb.collection("projects").create({ name, color: "#ff00ff" }),
-  //   onSettled: () => client.invalidateQueries(["projects"]),
-  // });
+  const createProject = trpc.project.create.useMutation({
+    onSettled: () => {
+      const queryKey = getQueryKey(trpc.project.getAll);
+      queryClient.invalidateQueries(queryKey);
+    },
+  });
 
   if (isError) return <p className="text-white">Error</p>;
   if (isLoading) return <p className="text-white">Loading...</p>;
