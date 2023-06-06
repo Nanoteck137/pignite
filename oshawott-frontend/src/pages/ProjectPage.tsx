@@ -237,6 +237,15 @@ const ProjectPage = () => {
     { enabled: !!id },
   );
 
+  const {
+    data: listData,
+    isError: isListDataError,
+    isLoading: isListDataLoading,
+  } = trpc.project.list.getListForProject.useQuery(
+    { projectId: data?.id ?? "" },
+    { enabled: !!data },
+  );
+
   const createList = useMutation({
     mutationFn: (name: string) =>
       pb.collection("lists").create({ name, project: id }),
@@ -293,6 +302,12 @@ const ProjectPage = () => {
       <div className="h-10"></div>
 
       <div className="container mx-auto flex flex-col gap-2 px-2">
+        {isListDataError && <p>Error</p>}
+        {isListDataLoading && <p>Loading...</p>}
+        {listData &&
+          listData.map((list) => {
+            return <p>List: {list.name}</p>;
+          })}
         {/* {data.lists.map((list) => { */}
         {/*   return ( */}
         {/*     <ProjectList key={list} projectId={data.project.id} listId={list} /> */}
