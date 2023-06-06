@@ -51,49 +51,8 @@ const PageRoutes = () => {
         <Route index element={<HomePage />} />
         <Route path="/project/:id" element={<ProjectPage />} />
         <Route path="/debug" element={<DebugPage />} />
-        <Route path="/test" element={<Test />} />
       </Routes>
     </AnimatePresence>
-  );
-};
-
-const Test = () => {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const queryClient = useQueryClient();
-  const { data, error, isError, isLoading } = trpc.getAll.useQuery();
-  const createNew = trpc.createNew.useMutation({
-    onSuccess: (data) => console.log(data),
-    onSettled: () => {
-      const queryKey = getQueryKey(trpc.getAll);
-      queryClient.invalidateQueries(queryKey);
-    },
-  });
-
-  if (isError) return <p>Error: {error.message}</p>;
-  if (isLoading) return <p>Loading...</p>;
-
-  return (
-    <div className="flex flex-col text-white">
-      {data.map((item) => {
-        return <p key={item.id}>{item.text}</p>;
-      })}
-
-      <label>
-        <span>Text: </span>
-        <input className="text-black" ref={inputRef} type="text" />
-      </label>
-
-      <button
-        className="bg-blue-400 px-3 py-1"
-        onClick={() => {
-          if (inputRef.current) {
-            createNew.mutate({ text: inputRef.current.value });
-          }
-        }}>
-        Create New
-      </button>
-    </div>
   );
 };
 
