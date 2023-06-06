@@ -1,8 +1,4 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -10,8 +6,6 @@ import DebugPage from "./pages/Debug";
 import HomePage from "./pages/HomePage";
 import ProjectPage from "./pages/ProjectPage";
 import { trpc } from "./trpc";
-import { useRef } from "react";
-import { getQueryKey } from "@trpc/react-query";
 
 // TODO(patrik):
 //  - Edit Project
