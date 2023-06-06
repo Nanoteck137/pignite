@@ -51,6 +51,14 @@ const listRouter = router({
     .mutation(async ({ input, ctx }) => {
       return await ctx.prisma.projectList.create({ data: input });
     }),
+  delete: publicProcedure
+    .meta({ openapi: { method: "DELETE", path: "/project/list" } })
+    .input(WithId)
+    .output(z.void())
+    .mutation(async ({ input, ctx }) => {
+      const { id } = input;
+      await ctx.prisma.projectList.delete({ where: { id } });
+    }),
 
   createItem: publicProcedure
     .meta({ openapi: { method: "POST", path: "/project/list/item" } })
@@ -64,6 +72,33 @@ const listRouter = router({
     .output(ProjectListItemSchema)
     .mutation(async ({ input, ctx }) => {
       return await ctx.prisma.projectListItem.create({ data: input });
+    }),
+  deleteItem: publicProcedure
+    .meta({ openapi: { method: "DELETE", path: "/project/list/item" } })
+    .input(WithId)
+    .output(z.void())
+    .mutation(async ({ input, ctx }) => {
+      const { id } = input;
+      await ctx.prisma.projectListItem.delete({ where: { id } });
+    }),
+  editItem: publicProcedure
+    .meta({ openapi: { method: "PATCH", path: "/project/list/item" } })
+    .input(
+      z.object({
+        id: Id,
+        data: z.object({
+          name: z.string().optional(),
+          done: z.boolean().optional(),
+          listId: Id.optional(),
+        }),
+      }),
+    )
+    .output(ProjectListItemSchema)
+    .mutation(async ({ input, ctx }) => {
+      return await ctx.prisma.projectListItem.update({
+        where: { id: input.id },
+        data: input.data,
+      });
     }),
 });
 

@@ -38,5 +38,13 @@ const projectRouter = router({
     .mutation(({ input, ctx }) => {
       return ctx.prisma.project.create({ data: input });
     }),
+  delete: publicProcedure
+    .meta({ openapi: { method: "DELETE", path: "/project" } })
+    .input(WithId)
+    .output(z.void())
+    .mutation(async ({ input, ctx }) => {
+      const { id } = input;
+      await ctx.prisma.project.delete({ where: { id } });
+    }),
 });
 export default projectRouter;
