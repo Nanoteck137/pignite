@@ -3,20 +3,18 @@ import {
   PlusIcon,
   ChevronRightIcon,
 } from "@heroicons/react/20/solid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { getProjects } from "../api/api";
-import { pb } from "../api/pocketbase";
 import CreateModal from "../components/CreateModal";
 import { trpc } from "../trpc";
 import { getQueryKey } from "@trpc/react-query";
 
 const HomePage = () => {
-  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
-
   const queryClient = useQueryClient();
+
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const { data, isError, isLoading } = trpc.project.getAll.useQuery();
 

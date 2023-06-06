@@ -5,12 +5,10 @@ import {
   TrashIcon,
   ChevronUpIcon,
 } from "@heroicons/react/20/solid";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ListWithItems } from "../api/api";
-import { pb } from "../api/pocketbase";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { Disclosure } from "@headlessui/react";
@@ -26,43 +24,21 @@ interface ListItemProps {
 }
 
 const ViewListItem = ({ item }: ListItemProps) => {
+  const queryClient = useQueryClient();
+
   const deleteModal = useRef<HTMLDialogElement>(null);
 
-  const client = useQueryClient();
   const editItem = trpc.project.list.editItem.useMutation({
     onSettled: () => {
       const queryKey = getQueryKey(trpc.project.list.getList);
-      client.invalidateQueries(queryKey);
+      queryClient.invalidateQueries(queryKey);
     },
   });
-  // const markItem = useMutation({
-  //   mutationFn: (done: boolean) =>
-  //     pb.collection("list_items").update(item.id, { done }),
-  //   onMutate: async (done) => {
-  //     await client.cancelQueries(["list", item.listId]);
-  //
-  //     const oldData = client.getQueryData<ListWithItems>(["list", item.listId]);
-  //     client.setQueryData<ListWithItems>(["list", item.listId], (old) => {
-  //       if (old) {
-  //         const oldItem = old.items.find((oldItem) => oldItem.id === item.id);
-  //         if (oldItem) {
-  //           oldItem.done = done;
-  //         }
-  //       }
-  //       return old;
-  //     });
-  //     return { oldData };
-  //   },
-  //   onError: (_err, _done, context) => {
-  //     client.setQueryData(["list", item.listId], context?.oldData);
-  //   },
-  //   onSettled: () => client.invalidateQueries(["list", item.listId]),
-  // });
 
   const deleteItem = trpc.project.list.deleteItem.useMutation({
     onSettled: () => {
       const queryKey = getQueryKey(trpc.project.list.getList);
-      client.invalidateQueries(queryKey);
+      queryClient.invalidateQueries(queryKey);
     },
   });
 
@@ -128,9 +104,9 @@ interface ProjectListProps {
 const ProjectList = (props: ProjectListProps) => {
   const { listId } = props;
 
-  const deleteModal = useRef<HTMLDialogElement>(null);
-
   const queryClient = useQueryClient();
+
+  const deleteModal = useRef<HTMLDialogElement>(null);
 
   const { data, isError, isLoading } = trpc.project.list.getList.useQuery({
     id: listId,
@@ -231,12 +207,11 @@ const ProjectList = (props: ProjectListProps) => {
 const ProjectPage = () => {
   const { id } = useParams();
 
-  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
-  const deleteModal = useRef<HTMLDialogElement>(null);
-
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const queryClient = useQueryClient();
+  const deleteModal = useRef<HTMLDialogElement>(null);
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const { data, isError, isLoading } = trpc.project.get.useQuery(
     { id: id ?? "" },
@@ -259,12 +234,6 @@ const ProjectPage = () => {
       queryClient.invalidateQueries(queryKey);
     },
   });
-
-  // const deleteProject = useMutation({
-  //   mutationFn: () => pb.collection("projects").delete(id || ""),
-  //   onSuccess: () => navigate("/"),
-  //   onSettled: () => queryClient.invalidateQueries(["projects"]),
-  // });
 
   if (isError) return <p className="text-white">Error</p>;
   if (isLoading) return <p className="text-white">Loading...</p>;
