@@ -6,8 +6,7 @@ export default {
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-    "plugin:prettier/@typescript-eslint",
+    "prettier",
   ],
   overrides: [],
   parser: "@typescript-eslint/parser",
@@ -15,7 +14,7 @@ export default {
     ecmaVersion: "latest",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "prettier"],
+  plugins: ["@typescript-eslint"],
   rules: {
     indent: ["error", 2],
     "linebreak-style": ["error", "unix"],
