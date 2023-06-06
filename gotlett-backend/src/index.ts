@@ -7,6 +7,7 @@ import { createOpenApiExpressMiddleware } from "trpc-openapi";
 import { appRouter } from "./api/router";
 import { PrismaClient } from "@prisma/client";
 import { Context } from "./trpc";
+import path from "path";
 
 const prismaClient = new PrismaClient();
 
@@ -19,6 +20,8 @@ function createContextInner(): Context {
 const app = express();
 
 app.use(cors());
+
+app.use(express.static(path.join(process.cwd(), "public")));
 
 app.use(
   "/api",
@@ -35,5 +38,9 @@ app.use(
     createContext: () => createContextInner(),
   }),
 );
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/index.html"));
+});
 
 app.listen(3000);
