@@ -5,23 +5,20 @@ import {
   TrashIcon,
   ChevronUpIcon,
 } from "@heroicons/react/20/solid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import {
-  ListItem,
-  ListWithItems,
-  getListWithItems,
-  getProjectForPage,
-} from "../api/api";
+import { ListWithItems } from "../api/api";
 import { pb } from "../api/pocketbase";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { Disclosure } from "@headlessui/react";
 import NewConfirmModal from "../components/ConfirmModal";
 import Button from "../components/Button";
-import { trpc } from "../trpc";
+import { RouterOutputs, trpc } from "../trpc";
+
+type ListItem = RouterOutputs["project"]["list"]["getList"]["items"][number];
 
 interface ListItemProps {
   item: ListItem;
@@ -35,10 +32,10 @@ const ViewListItem = ({ item }: ListItemProps) => {
     mutationFn: (done: boolean) =>
       pb.collection("list_items").update(item.id, { done }),
     onMutate: async (done) => {
-      await client.cancelQueries(["list", item.list]);
+      await client.cancelQueries(["list", item.listId]);
 
-      const oldData = client.getQueryData<ListWithItems>(["list", item.list]);
-      client.setQueryData<ListWithItems>(["list", item.list], (old) => {
+      const oldData = client.getQueryData<ListWithItems>(["list", item.listId]);
+      client.setQueryData<ListWithItems>(["list", item.listId], (old) => {
         if (old) {
           const oldItem = old.items.find((oldItem) => oldItem.id === item.id);
           if (oldItem) {
@@ -50,20 +47,20 @@ const ViewListItem = ({ item }: ListItemProps) => {
       return { oldData };
     },
     onError: (_err, _done, context) => {
-      client.setQueryData(["list", item.list], context?.oldData);
+      client.setQueryData(["list", item.listId], context?.oldData);
     },
-    onSettled: () => client.invalidateQueries(["list", item.list]),
+    onSettled: () => client.invalidateQueries(["list", item.listId]),
   });
 
   const editItemName = useMutation({
     mutationFn: (name: string) =>
       pb.collection("list_items").update(item.id, { name }),
-    onSettled: () => client.invalidateQueries(["list", item.list]),
+    onSettled: () => client.invalidateQueries(["list", item.listId]),
   });
 
   const deleteItem = useMutation({
     mutationFn: () => pb.collection("list_items").delete(item.id),
-    onSettled: () => client.invalidateQueries(["list", item.list]),
+    onSettled: () => client.invalidateQueries(["list", item.listId]),
   });
 
   return (
@@ -131,9 +128,8 @@ const ProjectList = (props: ProjectListProps) => {
 
   const client = useQueryClient();
 
-  const { data, isError, isLoading } = useQuery({
-    queryKey: ["list", listId],
-    queryFn: () => getListWithItems(listId),
+  const { data, isError, isLoading } = trpc.project.list.getList.useQuery({
+    id: listId,
   });
 
   const createListItem = useMutation({
@@ -237,15 +233,6 @@ const ProjectPage = () => {
     { enabled: !!id },
   );
 
-  const {
-    data: listData,
-    isError: isListDataError,
-    isLoading: isListDataLoading,
-  } = trpc.project.list.getListForProject.useQuery(
-    { projectId: data?.id ?? "" },
-    { enabled: !!data },
-  );
-
   const createList = useMutation({
     mutationFn: (name: string) =>
       pb.collection("lists").create({ name, project: id }),
@@ -302,17 +289,11 @@ const ProjectPage = () => {
       <div className="h-10"></div>
 
       <div className="container mx-auto flex flex-col gap-2 px-2">
-        {isListDataError && <p>Error</p>}
-        {isListDataLoading && <p>Loading...</p>}
-        {listData &&
-          listData.map((list) => {
-            return <p>List: {list.name}</p>;
-          })}
-        {/* {data.lists.map((list) => { */}
-        {/*   return ( */}
-        {/*     <ProjectList key={list} projectId={data.project.id} listId={list} /> */}
-        {/*   ); */}
-        {/* })} */}
+        {data.lists.map((list) => {
+          return (
+            <ProjectList key={list.id} projectId={data.id} listId={list.id} />
+          );
+        })}
       </div>
 
       <NewConfirmModal
