@@ -4,6 +4,9 @@ export const ProjectSchema = z.object({
   id: z.string().cuid(),
   name: z.string(),
   color: z.string(),
+
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 export type ProjectSchema = z.infer<typeof ProjectSchema>;
 

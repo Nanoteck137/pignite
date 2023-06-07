@@ -35,8 +35,9 @@ const projectRouter = router({
     .meta({ openapi: { method: "POST", path: "/project" } })
     .input(z.object({ name: z.string(), color: z.string() }))
     .output(ProjectSchema)
-    .mutation(({ input, ctx }) => {
-      return ctx.prisma.project.create({ data: input });
+    .mutation(async ({ input, ctx }) => {
+      const { name, color } = input;
+      return await ctx.prisma.project.create({ data: { name, color } });
     }),
   delete: publicProcedure
     .meta({ openapi: { method: "DELETE", path: "/project" } })

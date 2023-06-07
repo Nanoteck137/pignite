@@ -3,6 +3,8 @@ CREATE TABLE "Project" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "color" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
 );
@@ -12,6 +14,8 @@ CREATE TABLE "ProjectList" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ProjectList_pkey" PRIMARY KEY ("id")
 );
@@ -22,6 +26,8 @@ CREATE TABLE "ProjectListItem" (
     "name" TEXT NOT NULL,
     "done" BOOLEAN NOT NULL,
     "listId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ProjectListItem_pkey" PRIMARY KEY ("id")
 );
