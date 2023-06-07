@@ -13,7 +13,9 @@ const projectRouter = router({
     .input(z.void())
     .output(z.array(ProjectSchema))
     .query(({ ctx }) => {
-      return ctx.prisma.project.findMany();
+      return ctx.prisma.project.findMany({
+        orderBy: { createdAt: "asc" },
+      });
     }),
   get: publicProcedure
     .meta({ openapi: { method: "GET", path: "/project" } })
@@ -22,7 +24,9 @@ const projectRouter = router({
     .query(async ({ input, ctx }) => {
       const result = await ctx.prisma.project.findUnique({
         where: { id: input.id },
-        include: { lists: { select: { id: true } } },
+        include: {
+          lists: { select: { id: true }, orderBy: { createdAt: "asc" } },
+        },
       });
       if (!result)
         throw new TRPCError({

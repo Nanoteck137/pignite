@@ -32,7 +32,7 @@ const listRouter = router({
       const { id } = input;
       const result = await ctx.prisma.projectList.findUnique({
         where: { id },
-        include: { items: true },
+        include: { items: { orderBy: { createdAt: "asc" } } },
       });
 
       if (!result) {
