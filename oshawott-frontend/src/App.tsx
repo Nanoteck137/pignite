@@ -44,12 +44,15 @@ const App = () => {
 
 const PageRoutes = () => {
   const location = useLocation();
+  const isDev = import.meta.env.DEV;
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route index element={<HomePage />} />
         <Route path="/project/:id" element={<ProjectPage />} />
-        <Route path="/debug" element={<DebugPage />} />
+
+        {isDev && <Route path="/debug" element={<DebugPage />} />}
       </Routes>
     </AnimatePresence>
   );
