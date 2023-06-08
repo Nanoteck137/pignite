@@ -34,14 +34,18 @@ const ViewListItem = ({ item }: ListItemProps) => {
 
   const editItem = trpc.project.list.editItem.useMutation({
     onSettled: () => {
-      const queryKey = getQueryKey(trpc.project.list.getList);
+      const queryKey = getQueryKey(trpc.project.list.getList, {
+        id: item.listId,
+      });
       queryClient.invalidateQueries(queryKey);
     },
   });
 
   const deleteItem = trpc.project.list.deleteItem.useMutation({
     onSettled: () => {
-      const queryKey = getQueryKey(trpc.project.list.getList);
+      const queryKey = getQueryKey(trpc.project.list.getList, {
+        id: item.listId,
+      });
       queryClient.invalidateQueries(queryKey);
     },
   });
