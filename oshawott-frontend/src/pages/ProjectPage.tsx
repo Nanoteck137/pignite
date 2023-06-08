@@ -110,6 +110,8 @@ const ProjectList = (props: ProjectListProps) => {
   const queryClient = useQueryClient();
 
   const deleteModal = useRef<HTMLDialogElement>(null);
+  const editModal = useRef<HTMLDialogElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
 
   const { data, isError, isLoading } = trpc.project.list.getList.useQuery({
     id: listId,
@@ -126,6 +128,17 @@ const ProjectList = (props: ProjectListProps) => {
     onSettled: () => {
       if (data) {
         const queryKey = getQueryKey(trpc.project.get, { id: data.projectId });
+        queryClient.invalidateQueries(queryKey);
+      }
+    },
+  });
+
+  const editList = trpc.project.list.edit.useMutation({
+    onSettled: () => {
+      if (data) {
+        const queryKey = getQueryKey(trpc.project.list.getList, {
+          id: data.id,
+        });
         queryClient.invalidateQueries(queryKey);
       }
     },
@@ -172,7 +185,13 @@ const ProjectList = (props: ProjectListProps) => {
                   <PlusIcon className="h-8 w-8" />
                   <span>New Item</span>
                 </Button>
-                <Button varient="warning" varientStyle="outline">
+                <Button
+                  varient="warning"
+                  varientStyle="outline"
+                  onClick={() => {
+                    editModal.current && editModal.current.showModal();
+                  }}
+                >
                   <PencilSquareIcon className="h-6 w-6" />
                 </Button>
                 <Button
@@ -193,6 +212,49 @@ const ProjectList = (props: ProjectListProps) => {
           </>
         )}
       </Disclosure>
+
+      <dialog
+        className="w-full max-w-sm rounded bg-slate-700 px-4 py-4"
+        ref={editModal}
+        onClick={handleModalOutsideClick}
+      >
+        <h1 className="text-2xl text-white">Edit List</h1>
+        <div className="h-4"></div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+
+            if (nameInput.current) {
+              const name = nameInput.current.value;
+              editList.mutate({ id: data.id, data: { name } });
+
+              editModal.current && editModal.current.close();
+            }
+          }}
+        >
+          <Input
+            ref={nameInput}
+            label="New Name"
+            type="text"
+            defaultValue={data.name}
+          />
+
+          <div className="h-4"></div>
+          <div className="flex justify-end gap-2">
+            <Button
+              varient="secondary"
+              varientStyle="text"
+              type="button"
+              onClick={() => {
+                editModal.current && editModal.current.close();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
+      </dialog>
 
       <NewConfirmModal
         ref={deleteModal}
