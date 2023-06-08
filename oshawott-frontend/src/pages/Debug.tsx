@@ -85,6 +85,7 @@ const InputTest = () => {
           <Input label="Label" type="text" placeholder="Placeholder" />
         </div>
       </div>
+      <Input label="Password" type="password" />
     </div>
   );
 };
