@@ -71,7 +71,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
       <Dropdown
         items={[
           {
-            name: "Test",
+            name: "Edit Item",
             icon: <PencilSquareIcon className="h-6 w-6" />,
             onClick: () => editModal.current && editModal.current.showModal(),
           },
