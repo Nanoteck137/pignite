@@ -16,6 +16,7 @@ import NewConfirmModal from "../components/ConfirmModal";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { RouterOutputs, trpc } from "../trpc";
+import { handleModalOutsideClick } from "../utils/modal";
 
 type ListItem = RouterOutputs["project"]["list"]["getList"]["items"][number];
 
@@ -45,7 +46,8 @@ const ViewListItem = ({ item }: ListItemProps) => {
   return (
     <div
       className="flex items-center justify-between rounded bg-slate-600 p-2 elevation-4"
-      key={item.id}>
+      key={item.id}
+    >
       <label className="flex flex-grow items-center hover:cursor-pointer">
         <input
           checked={item.done}
@@ -136,7 +138,8 @@ const ProjectList = (props: ProjectListProps) => {
       <Disclosure
         className="rounded bg-slate-700 px-2 elevation-4"
         as="div"
-        key={data.id}>
+        key={data.id}
+      >
         {({ open }) => (
           <>
             <div className="flex items-center">
@@ -163,7 +166,8 @@ const ProjectList = (props: ProjectListProps) => {
                       newItem.mutate({ name, listId: data.id });
                       // createListItem.mutate(name);
                     }
-                  }}>
+                  }}
+                >
                   <PlusIcon className="h-8 w-8" />
                   <span>New Item</span>
                 </Button>
@@ -175,7 +179,8 @@ const ProjectList = (props: ProjectListProps) => {
                   varientStyle="outline"
                   onClick={() =>
                     deleteModal.current && deleteModal.current.showModal()
-                  }>
+                  }
+                >
                   <TrashIcon className="h-6 w-6" />
                 </Button>
               </div>
@@ -211,6 +216,8 @@ const ProjectPage = () => {
   const navigate = useNavigate();
 
   const deleteModal = useRef<HTMLDialogElement>(null);
+  const editModal = useRef<HTMLDialogElement>(null);
+  const editInput = useRef<HTMLInputElement>(null);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const { data, isError, isLoading } = trpc.project.get.useQuery(
@@ -235,6 +242,15 @@ const ProjectPage = () => {
     },
   });
 
+  const editProject = trpc.project.edit.useMutation({
+    onSettled: () => {
+      if (data) {
+        const queryKey = getQueryKey(trpc.project.get, { id: data.id });
+        queryClient.invalidateQueries(queryKey);
+      }
+    },
+  });
+
   if (isError) return <p className="text-white">Error</p>;
   if (isLoading) return <p className="text-white">Loading...</p>;
 
@@ -243,7 +259,8 @@ const ProjectPage = () => {
       className="w-full"
       initial={{ x: "-100%" }}
       animate={{ x: "0" }}
-      exit={{ x: "-100%" }}>
+      exit={{ x: "-100%" }}
+    >
       <div className="h-14 bg-white elevation-6">
         <div className="container mx-auto flex h-full items-center justify-between bg-slate-700 px-4">
           <Link to="/">
@@ -263,6 +280,8 @@ const ProjectPage = () => {
               {
                 name: "Edit Project",
                 icon: <PencilSquareIcon className="h-6 w-6" />,
+                onClick: () =>
+                  editModal.current && editModal.current.showModal(),
               },
               {
                 name: "Delete Project",
@@ -296,6 +315,51 @@ const ProjectPage = () => {
           deleteModal.current && deleteModal.current.close();
         }}
       />
+
+      <dialog
+        className="w-full max-w-sm rounded bg-slate-700 px-4 py-4"
+        ref={editModal}
+        onClick={handleModalOutsideClick}
+      >
+        <h1 className="text-2xl text-white">Edit Project</h1>
+        <div className="h-4"></div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+
+            if (editInput.current) {
+              const name = editInput.current.value;
+              editProject.mutate({ id: data.id, data: { name } });
+
+              editModal.current && editModal.current.close();
+            }
+          }}
+        >
+          <label className="flex flex-col">
+            <span className="text-sm font-medium text-gray-300">New Name</span>
+            <input
+              className="rounded border border-slate-400 bg-slate-500 p-0 pl-2 text-white focus:border-purple-300 focus:ring-purple-400"
+              ref={editInput}
+              type="text"
+              defaultValue={data.name}
+            />
+          </label>
+
+          <div className="h-4"></div>
+          <div className="flex justify-end gap-2">
+            <Button
+              varient="secondary"
+              varientStyle="text"
+              onClick={() => {
+                editModal.current && editModal.current.close();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
+      </dialog>
 
       <CreateModal
         title="New List"
