@@ -17,6 +17,7 @@ import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
 import { RouterOutputs, trpc } from "../trpc";
 import { handleModalOutsideClick } from "../utils/modal";
+import Input from "../components/Input";
 
 type ListItem = RouterOutputs["project"]["list"]["getList"]["items"][number];
 
@@ -336,14 +337,19 @@ const ProjectPage = () => {
           }}
         >
           <label className="flex flex-col">
-            <span className="text-sm font-medium text-gray-300">New Name</span>
+            <span className="pl-2 text-sm font-medium text-gray-300">
+              New Name
+            </span>
+            <div className="h-1" />
             <input
-              className="rounded border border-slate-400 bg-slate-500 p-0 pl-2 text-white focus:border-purple-300 focus:ring-purple-400"
+              className="rounded border border-slate-500 bg-slate-600 px-2 py-1 text-white placeholder:text-gray-200 focus:border-purple-300 focus:ring-purple-400"
               ref={editInput}
               type="text"
               defaultValue={data.name}
             />
           </label>
+
+          <Input label="Test" type="text" />
 
           <div className="h-4"></div>
           <div className="flex justify-end gap-2">
