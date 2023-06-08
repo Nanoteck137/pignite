@@ -59,6 +59,19 @@ const listRouter = router({
       const { id } = input;
       await ctx.prisma.projectList.delete({ where: { id } });
     }),
+  edit: publicProcedure
+    .meta({ openapi: { method: "PATCH", path: "/project/list" } })
+    .input(
+      z.object({
+        id: Id,
+        data: z.object({ name: z.string().min(1).optional() }),
+      }),
+    )
+    .output(ProjectListSchema)
+    .mutation(async ({ input, ctx }) => {
+      const { id, data } = input;
+      return await ctx.prisma.projectList.update({ where: { id }, data });
+    }),
 
   createItem: publicProcedure
     .meta({ openapi: { method: "POST", path: "/project/list/item" } })
