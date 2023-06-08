@@ -6,9 +6,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import CreateModal from "../components/CreateModal";
 import { trpc } from "../trpc";
 import { handleModalOutsideClick } from "../utils/modal";
 import Button from "../components/Button";
@@ -20,7 +19,6 @@ const HomePage = () => {
 
   const createModal = useRef<HTMLDialogElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
-  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const { data, isError, isLoading } = trpc.project.getAll.useQuery();
 
@@ -119,13 +117,6 @@ const HomePage = () => {
           </div>
         </form>
       </dialog>
-
-      <CreateModal
-        title="New Project"
-        open={isCreateModalOpen}
-        close={() => setCreateModalOpen(false)}
-        create={(name) => createProject.mutate({ name, color: "#ff00ff" })}
-      />
     </motion.div>
   );
 };
