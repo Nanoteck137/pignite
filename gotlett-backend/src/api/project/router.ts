@@ -3,7 +3,7 @@ import { publicProcedure, router } from "../../trpc";
 import { ProjectSchema } from "../../model/project";
 import { TRPCError } from "@trpc/server";
 import listRouter from "./list/router";
-import { WithId } from "../../model/id";
+import { Id, WithId } from "../../model/id";
 
 const projectRouter = router({
   list: listRouter,
@@ -50,6 +50,22 @@ const projectRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { id } = input;
       await ctx.prisma.project.delete({ where: { id } });
+    }),
+  edit: publicProcedure
+    .meta({ openapi: { method: "PATCH", path: "/project" } })
+    .input(
+      z.object({
+        id: Id,
+        data: z.object({
+          name: z.string().min(1).optional(),
+          color: z.string().min(7).optional(),
+        }),
+      }),
+    )
+    .output(ProjectSchema)
+    .mutation(async ({ input, ctx }) => {
+      const { id, data } = input;
+      return await ctx.prisma.project.update({ where: { id }, data });
     }),
 });
 export default projectRouter;
