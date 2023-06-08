@@ -29,6 +29,8 @@ const ViewListItem = ({ item }: ListItemProps) => {
   const queryClient = useQueryClient();
 
   const deleteModal = useRef<HTMLDialogElement>(null);
+  const editModal = useRef<HTMLDialogElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
 
   const editItem = trpc.project.list.editItem.useMutation({
     onSettled: () => {
@@ -67,12 +69,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
           {
             name: "Test",
             icon: <PencilSquareIcon className="h-6 w-6" />,
-            onClick: () => {
-              const name = prompt("New name");
-              if (name) {
-                editItem.mutate({ id: item.id, data: { name: name } });
-              }
-            },
+            onClick: () => editModal.current && editModal.current.showModal(),
           },
           {
             name: "Delete",
@@ -83,6 +80,49 @@ const ViewListItem = ({ item }: ListItemProps) => {
           },
         ]}
       />
+
+      <dialog
+        className="w-full max-w-sm rounded bg-slate-700 px-4 py-4"
+        ref={editModal}
+        onClick={handleModalOutsideClick}
+      >
+        <h1 className="text-2xl text-white">Edit Item</h1>
+        <div className="h-4"></div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+
+            if (nameInput.current) {
+              const name = nameInput.current.value;
+              editItem.mutate({ id: item.id, data: { name } });
+
+              editModal.current && editModal.current.close();
+            }
+          }}
+        >
+          <Input
+            ref={nameInput}
+            label="New Name"
+            type="text"
+            defaultValue={item.name}
+          />
+
+          <div className="h-4"></div>
+          <div className="flex justify-end gap-2">
+            <Button
+              varient="secondary"
+              varientStyle="text"
+              type="button"
+              onClick={() => {
+                editModal.current && editModal.current.close();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
+      </dialog>
 
       <NewConfirmModal
         ref={deleteModal}
