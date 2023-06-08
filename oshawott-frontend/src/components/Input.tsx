@@ -3,6 +3,7 @@ import { ComponentPropsWithoutRef, forwardRef } from "react";
 
 type InputProps = {
   label?: string;
+  type: "text" | "password";
 } & ComponentPropsWithoutRef<"input">;
 
 const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
