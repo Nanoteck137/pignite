@@ -1,6 +1,8 @@
+import { useState } from "react";
 import Button from "../components/Button";
+import Input from "../components/Input";
 
-const DebugPage = () => {
+const ButtonTest = () => {
   const sizes = ["small", "normal", "large"] as const;
   const varients = [
     "primary",
@@ -27,7 +29,7 @@ const DebugPage = () => {
   }
 
   return (
-    <div className="">
+    <div>
       <div className="grid place-items-center gap-4 sm:grid-cols-3">
         {buttons.map((button) => {
           const { varient, varientStyle, size, label } = button;
@@ -37,7 +39,8 @@ const DebugPage = () => {
               varient={varient}
               varientStyle={varientStyle}
               size={size}
-              key={`${varient}-${varientStyle}-${size}`}>
+              key={`${varient}-${varientStyle}-${size}`}
+            >
               {label}
             </Button>
           );
@@ -55,23 +58,54 @@ const DebugPage = () => {
               varient={varient}
               varientStyle={varientStyle}
               size={size}
-              key={`${varient}-${varientStyle}-${size}-full`}>
+              key={`${varient}-${varientStyle}-${size}-full`}
+            >
               {label}
             </Button>
           );
         })}
       </div>
+    </div>
+  );
+};
 
-      {/* {sizes.map((size) => { */}
-      {/*   return ( */}
-      {/*     <div className="flex justify-around gap-2" key={size}> */}
-      {/*       {varients.map((varient) => { */}
-      {/*         return ( */}
-      {/*         ); */}
-      {/*       })} */}
-      {/*     </div> */}
-      {/*   ); */}
-      {/* })} */}
+const InputTest = () => {
+  return (
+    <div>
+      <div className="flex justify-around">
+        <div>
+          <Input type="text" />
+          <div className="h-2" />
+          <Input label="Label" type="text" />
+        </div>
+
+        <div>
+          <Input type="text" placeholder="Placeholder" />
+          <div className="h-2" />
+          <Input label="Label" type="text" placeholder="Placeholder" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+type State = "button" | "input";
+
+const DebugPage = () => {
+  const [state, setState] = useState<State>("button");
+
+  return (
+    <div className="">
+      <div className="bg-slate-600 py-8">
+        <div className="flex justify-around">
+          <Button onClick={() => setState("button")}>Buttons</Button>
+          <Button onClick={() => setState("input")}>Inputs</Button>
+        </div>
+      </div>
+
+      <div className="h-8" />
+      {state == "button" && <ButtonTest />}
+      {state == "input" && <InputTest />}
     </div>
   );
 };
