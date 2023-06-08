@@ -6,14 +6,20 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import CreateModal from "../components/CreateModal";
 import { trpc } from "../trpc";
+import { handleModalOutsideClick } from "../utils/modal";
+import Button from "../components/Button";
+import Input from "../components/Input";
 
 const HomePage = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
+  const createModal = useRef<HTMLDialogElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const { data, isError, isLoading } = trpc.project.getAll.useQuery();
@@ -32,22 +38,32 @@ const HomePage = () => {
     <motion.div
       initial={{ x: "-100%" }}
       animate={{ x: "0" }}
-      exit={{ x: "-100%" }}>
+      exit={{ x: "-100%" }}
+    >
       <div className="h-14 bg-white elevation-6">
         <div className="container mx-auto flex h-full items-center justify-between bg-slate-700 px-4">
-          <Link to="/">
+          <Button
+            varient="secondary"
+            varientStyle="text"
+            className="px-1 py-1"
+            onClick={() => navigate("/")}
+          >
             <HomeIcon className="h-8 w-8 text-white" />
-          </Link>
-          <button
+          </Button>
+          <Button
+            varient="secondary"
+            varientStyle="text"
+            className="px-0 py-0"
             onClick={() => {
-              setCreateModalOpen(true);
-            }}>
+              createModal.current && createModal.current.showModal();
+            }}
+          >
             <PlusIcon className="h-10 w-10 text-white" />
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="h-10"></div>
+      <div className="h-10" />
 
       <div className="container mx-auto flex flex-col gap-2 px-4">
         {data.map((item) => {
@@ -55,7 +71,8 @@ const HomePage = () => {
             <Link
               className="flex items-center justify-between rounded bg-purple-500 p-2 elevation-4 hover:bg-purple-400"
               to={`/project/${item.id}`}
-              key={item.id}>
+              key={item.id}
+            >
               <span className="ml-2 flex-grow text-left text-lg text-white">
                 {item.name}
               </span>
@@ -64,6 +81,44 @@ const HomePage = () => {
           );
         })}
       </div>
+
+      <dialog
+        className="w-full max-w-sm rounded bg-slate-700 px-4 py-4"
+        ref={createModal}
+        onClick={handleModalOutsideClick}
+      >
+        <h1 className="text-2xl text-white">Create new Project</h1>
+        <div className="h-4" />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+
+            if (nameInput.current) {
+              const name = nameInput.current.value;
+              createProject.mutate({ name, color: "#ff00ff" });
+              // TODO(patrik): Should we do this when the mutation succeeded
+              nameInput.current.value = "";
+            }
+            createModal.current && createModal.current.close();
+          }}
+        >
+          <Input ref={nameInput} type="text" placeholder="Name" />
+
+          <div className="h-4" />
+          <div className="flex justify-end">
+            <Button
+              varient="secondary"
+              varientStyle="text"
+              onClick={() => {
+                createModal.current && createModal.current.close();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">Create</Button>
+          </div>
+        </form>
+      </dialog>
 
       <CreateModal
         title="New Project"
