@@ -336,20 +336,7 @@ const ProjectPage = () => {
             }
           }}
         >
-          <label className="flex flex-col">
-            <span className="pl-2 text-sm font-medium text-gray-300">
-              New Name
-            </span>
-            <div className="h-1" />
-            <input
-              className="rounded border border-slate-500 bg-slate-600 px-2 py-1 text-white placeholder:text-gray-200 focus:border-purple-300 focus:ring-purple-400"
-              ref={editInput}
-              type="text"
-              defaultValue={data.name}
-            />
-          </label>
-
-          <Input label="Test" type="text" />
+          <Input label="New Name" type="text" defaultValue={data.name} />
 
           <div className="h-4"></div>
           <div className="flex justify-end gap-2">
