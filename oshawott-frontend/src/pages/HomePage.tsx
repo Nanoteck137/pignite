@@ -107,6 +107,7 @@ const HomePage = () => {
             <Button
               varient="secondary"
               varientStyle="text"
+              type="button"
               onClick={() => {
                 createModal.current && createModal.current.close();
               }}

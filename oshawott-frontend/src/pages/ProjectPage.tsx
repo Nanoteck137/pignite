@@ -343,6 +343,7 @@ const ProjectPage = () => {
             <Button
               varient="secondary"
               varientStyle="text"
+              type="button"
               onClick={() => {
                 editModal.current && editModal.current.close();
               }}
