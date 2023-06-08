@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name */
 import { Disclosure } from "@headlessui/react";
 import {
   ArrowLeftIcon,
@@ -9,7 +10,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { forwardRef, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Button from "../components/Button";
 import NewConfirmModal from "../components/ConfirmModal";
@@ -144,6 +145,59 @@ const ViewListItem = ({ item }: ListItemProps) => {
   );
 };
 
+interface NewItemDialogProps {
+  close: () => void;
+  onSubmit: (name: string) => void;
+}
+
+const NewItemDialog = forwardRef<HTMLDialogElement, NewItemDialogProps>(
+  (props, ref) => {
+    const { close, onSubmit } = props;
+
+    const nameInputRef = useRef<HTMLInputElement>(null);
+
+    return (
+      <dialog
+        className="w-full max-w-sm rounded bg-slate-700 px-4 py-4"
+        ref={ref}
+        onClick={handleModalOutsideClick}
+      >
+        <h1 className="text-2xl text-white">New Item</h1>
+        <div className="h-4"></div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+
+            if (nameInputRef.current) {
+              const name = nameInputRef.current.value;
+              onSubmit(name);
+
+              close();
+            }
+          }}
+        >
+          <Input ref={nameInputRef} placeholder="Name" type="text" />
+
+          <div className="h-4"></div>
+          <div className="flex justify-end gap-2">
+            <Button
+              varient="secondary"
+              varientStyle="text"
+              type="button"
+              onClick={() => {
+                close();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
+      </dialog>
+    );
+  },
+);
+
 interface ProjectListProps {
   listId: string;
 }
@@ -156,6 +210,7 @@ const ProjectList = (props: ProjectListProps) => {
   const deleteModal = useRef<HTMLDialogElement>(null);
   const editModal = useRef<HTMLDialogElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
+  const newItemModal = useRef<HTMLDialogElement>(null);
 
   const { data, isError, isLoading } = trpc.project.list.getList.useQuery({
     id: listId,
@@ -217,14 +272,9 @@ const ProjectList = (props: ProjectListProps) => {
               <div className="flex gap-2">
                 <Button
                   className="flex flex-grow items-center"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const name = prompt("New item name");
-                    if (name) {
-                      newItem.mutate({ name, listId: data.id });
-                      // createListItem.mutate(name);
-                    }
-                  }}
+                  onClick={() =>
+                    newItemModal.current && newItemModal.current.showModal()
+                  }
                 >
                   <PlusIcon className="h-8 w-8" />
                   <span>New Item</span>
@@ -256,6 +306,14 @@ const ProjectList = (props: ProjectListProps) => {
           </>
         )}
       </Disclosure>
+
+      <NewItemDialog
+        ref={newItemModal}
+        onSubmit={(name) => {
+          newItem.mutate({ name, listId: data.id });
+        }}
+        close={() => newItemModal.current && newItemModal.current.close()}
+      />
 
       <dialog
         className="w-full max-w-sm rounded bg-slate-700 px-4 py-4"
