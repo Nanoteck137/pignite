@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../../trpc";
-import { ProjectSchema } from "../../model/project";
+import {
+  ProjectListItemSchema,
+  ProjectListSchema,
+  ProjectSchema,
+} from "../../model/project";
 import { TRPCError } from "@trpc/server";
 import listRouter from "./list/router";
 import { Id, WithId } from "../../model/id";
