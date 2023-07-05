@@ -19,6 +19,7 @@ import Dropdown from "../components/Dropdown";
 import { RouterOutputs, trpc } from "../trpc";
 import { handleModalOutsideClick } from "../utils/modal";
 import Input from "../components/Input";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 type ListItem = RouterOutputs["project"]["list"]["getList"]["items"][number];
 
@@ -53,7 +54,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
 
   return (
     <div
-      className="flex items-center justify-between rounded bg-slate-600 p-2 elevation-4"
+      className="flex items-center justify-between border-b-2 border-slate-500 bg-slate-600 p-2"
       key={item.id}
     >
       <label className="flex flex-grow items-center hover:cursor-pointer">
@@ -298,10 +299,37 @@ const ProjectList = (props: ProjectListProps) => {
                   <TrashIcon className="h-6 w-6" />
                 </Button>
               </div>
-
-              {data.items.map((item) => {
-                return <ViewListItem key={item.id} item={item} />;
-              })}
+              <DragDropContext onDragEnd={() => console.log("End")}>
+                <Droppable droppableId="dropzone">
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex flex-col"
+                    >
+                      {data.items.map((item, index) => (
+                        <Draggable
+                          key={item.id}
+                          draggableId={item.id}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              className="relative"
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                            >
+                              <ViewListItem item={item} />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             </Disclosure.Panel>
           </>
         )}
