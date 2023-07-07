@@ -85,6 +85,8 @@ const listRouter = router({
     .mutation(async ({ input, ctx }) => {
       if (input.action == "MOVE_ITEM") {
         const { itemId, beforeId } = input.data;
+
+        // Get the full item
         const item = await ctx.prisma.projectListItem.findUnique({
           where: { id: itemId },
         });
@@ -93,26 +95,35 @@ const listRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST" });
         }
 
+        // Now get all of the list items
         const items = await ctx.prisma.projectListItem.findMany({
           where: { listId: item.listId },
           orderBy: { index: "asc" },
         });
 
+        // Find the dest item
         const destItem = items.find((item) => item.id == beforeId);
 
         if (!destItem) {
           throw new TRPCError({ code: "BAD_REQUEST" });
         }
 
+        // Remove the item we are reordering
         const [removedItem] = items.splice(item.index, 1);
+
+        // Insert the item where it should be
         items.splice(destItem.index, 0, removedItem);
 
+        // List of prisma transactions with new item index
         const updatedItems = [];
 
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
+          // If the item index dont match then we need to update them
           if (item.index != i) {
+            // Set the new index
             item.index = i;
+            // Push on the new updated item transaction
             updatedItems.push(
               ctx.prisma.projectListItem.update({
                 where: { id: item.id },
@@ -122,40 +133,9 @@ const listRouter = router({
           }
         }
 
-        let res = await ctx.prisma.$transaction(updatedItems);
-
-        console.log("Items", items);
-        console.log("Res", res);
+        // Wait for all the transactions
+        await ctx.prisma.$transaction(updatedItems);
       }
-      // if (input.action == "SWAP_ITEMS") {
-      //   const { source, destination } = input.data;
-      //   console.log("Swap", input.data.source, "-", input.data.destination);
-      //   const sourceItem = await ctx.prisma.projectListItem.findUnique({
-      //     where: { id: source },
-      //   });
-      //   const destItem = await ctx.prisma.projectListItem.findUnique({
-      //     where: { id: destination },
-      //   });
-      //
-      //   if (!sourceItem) {
-      //     throw new TRPCError({ code: "BAD_REQUEST" });
-      //   }
-      //
-      //   if (!destItem) {
-      //     throw new TRPCError({ code: "BAD_REQUEST" });
-      //   }
-      //
-      //   const first = ctx.prisma.projectListItem.update({
-      //     where: { id: source },
-      //     data: { index: destItem.index },
-      //   });
-      //   const second = ctx.prisma.projectListItem.update({
-      //     where: { id: destination },
-      //     data: { index: sourceItem.index },
-      //   });
-      //   const res = await ctx.prisma.$transaction([first, second]);
-      //   console.log("Res", res);
-      // }
     }),
 
   createItem: publicProcedure
