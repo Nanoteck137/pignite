@@ -77,12 +77,56 @@ const listRouter = router({
       z.discriminatedUnion("action", [
         z.object({
           action: z.literal("MOVE_ITEM"),
-          data: z.object({ itemId: Id, beforeItemId: Id }),
+          data: z.object({ itemId: Id, beforeId: Id }),
         }),
       ]),
     )
     .output(z.void())
     .mutation(async ({ input, ctx }) => {
+      if (input.action == "MOVE_ITEM") {
+        const { itemId, beforeId } = input.data;
+        const item = await ctx.prisma.projectListItem.findUnique({
+          where: { id: itemId },
+        });
+
+        if (!item) {
+          throw new TRPCError({ code: "BAD_REQUEST" });
+        }
+
+        const items = await ctx.prisma.projectListItem.findMany({
+          where: { listId: item.listId },
+          orderBy: { index: "asc" },
+        });
+
+        const destItem = items.find((item) => item.id == beforeId);
+
+        if (!destItem) {
+          throw new TRPCError({ code: "BAD_REQUEST" });
+        }
+
+        const [removedItem] = items.splice(item.index, 1);
+        items.splice(destItem.index, 0, removedItem);
+
+        const updatedItems = [];
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.index != i) {
+            item.index = i;
+            updatedItems.push(
+              ctx.prisma.projectListItem.update({
+                where: { id: item.id },
+                data: { index: item.index },
+              }),
+            );
+          }
+        }
+
+        let res = await ctx.prisma.$transaction(updatedItems);
+
+        console.log("Items", items);
+        console.log("Res", res);
+      }
       // if (input.action == "SWAP_ITEMS") {
       //   const { source, destination } = input.data;
       //   console.log("Swap", input.data.source, "-", input.data.destination);
