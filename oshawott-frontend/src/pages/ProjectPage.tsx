@@ -10,7 +10,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { motion } from "framer-motion";
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Button from "../components/Button";
 import NewConfirmModal from "../components/ConfirmModal";
@@ -215,9 +215,15 @@ const ProjectList = (props: ProjectListProps) => {
   const nameInput = useRef<HTMLInputElement>(null);
   const newItemModal = useRef<HTMLDialogElement>(null);
 
+  const [items, setItems] = useState<ListItem[]>([]);
+
   const { data, isError, isLoading } = trpc.project.list.getList.useQuery({
     id: listId,
   });
+
+  useEffect(() => {
+    if (data) setItems(data.items);
+  }, [data]);
 
   const newItem = trpc.project.list.createItem.useMutation({
     onSettled: () => {
@@ -351,7 +357,7 @@ const ProjectList = (props: ProjectListProps) => {
                 </Button>
               </div>
               <DragDropContext
-                onDragEnd={(res) => {
+                onDragEnd={async (res) => {
                   if (!res.destination) {
                     return;
                   }
@@ -360,15 +366,16 @@ const ProjectList = (props: ProjectListProps) => {
 
                   // const source = res.source.index;
                   // const dest = res.destination.index;
-                  // const newItems = Array.from(data.items);
-                  // const [reorderedItem] = newItems.splice(source, 1);
-                  // console.log(reorderedItem);
-                  // newItems.splice(dest, 0, reorderedItem);
 
                   const source = res.source.index;
                   const dest = res.destination.index;
                   const sourceItem = data.items[source];
                   const destItem = data.items[dest];
+
+                  const newItems = Array.from(items);
+                  const [reorderedItem] = newItems.splice(source, 1);
+                  newItems.splice(dest, 0, reorderedItem);
+                  setItems(newItems);
 
                   action.mutate({
                     action: "MOVE_ITEM",
@@ -383,7 +390,7 @@ const ProjectList = (props: ProjectListProps) => {
                       {...provided.droppableProps}
                       className="flex flex-col"
                     >
-                      {data.items.map((item, index) => (
+                      {items.map((item, index) => (
                         <Draggable
                           key={item.id}
                           draggableId={item.id}
