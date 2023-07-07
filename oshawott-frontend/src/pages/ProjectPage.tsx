@@ -67,9 +67,7 @@ const ViewListItem = ({ item }: ListItemProps) => {
           }
         />
         <div className="w-1"></div>
-        <span className="text-white">
-          {item.name} - {item.index}
-        </span>
+        <span className="text-white">{item.name}</span>
       </label>
 
       <Dropdown
