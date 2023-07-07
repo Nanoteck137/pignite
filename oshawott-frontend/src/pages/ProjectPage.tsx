@@ -247,45 +247,43 @@ const ProjectList = (props: ProjectListProps) => {
   });
 
   const action = trpc.project.list.action.useMutation({
-    // onMutate: async (d) => {
-    //   if (!data) {
-    //     return;
-    //   }
-    //
-    //   const queryKey = getQueryKey(trpc.project.list.getList, {
-    //     id: listId,
-    //   });
-    //
-    //   if (d.action == "SWAP_ITEMS") {
-    //     const { source, destination } = d.data;
-    //     await queryClient.cancelQueries(queryKey);
-    //
-    //     const prev = queryClient.getQueryData<
-    //       RouterOutputs["project"]["list"]["getList"]
-    //     >(queryKey, { exact: false });
-    //     if (!prev) {
-    //       return;
-    //     }
-    //
-    //     const sourceIndex = prev.items.findIndex((item) => item.id == source);
-    //     const destIndex = prev.items.findIndex(
-    //       (item) => item.id == destination,
-    //     );
-    //
-    //     const newItems = Array.from(prev.items);
-    //     const [reorderedItem] = newItems.splice(sourceIndex, 1);
-    //     newItems.splice(destIndex, 0, reorderedItem);
-    //
-    //     prev.items = newItems;
-    //
-    //     queryClient.setQueryData<RouterOutputs["project"]["list"]["getList"]>(
-    //       queryKey,
-    //       (_) => prev,
-    //     );
-    //
-    //     return { prev };
-    //   }
-    // },
+    onMutate: async (d) => {
+      if (!data) {
+        return;
+      }
+
+      const queryKey = getQueryKey(trpc.project.list.getList, {
+        id: listId,
+      });
+
+      if (d.action == "MOVE_ITEM") {
+        const { itemId, beforeId } = d.data;
+        await queryClient.cancelQueries(queryKey);
+
+        const prev = queryClient.getQueryData<
+          RouterOutputs["project"]["list"]["getList"]
+        >(queryKey, { exact: false });
+        if (!prev) {
+          return;
+        }
+
+        const sourceIndex = prev.items.findIndex((item) => item.id == itemId);
+        const destIndex = prev.items.findIndex((item) => item.id == beforeId);
+
+        const newItems = Array.from(prev.items);
+        const [reorderedItem] = newItems.splice(sourceIndex, 1);
+        newItems.splice(destIndex, 0, reorderedItem);
+
+        prev.items = newItems;
+
+        queryClient.setQueryData<RouterOutputs["project"]["list"]["getList"]>(
+          queryKey,
+          () => prev,
+        );
+
+        return { prev };
+      }
+    },
 
     onSettled: () => {
       if (data) {
@@ -367,15 +365,15 @@ const ProjectList = (props: ProjectListProps) => {
                   // console.log(reorderedItem);
                   // newItems.splice(dest, 0, reorderedItem);
 
-                  // const source = res.source.index;
-                  // const dest = res.destination.index;
-                  // const sourceItem = data.items[source];
-                  // const destItem = data.items[dest];
+                  const source = res.source.index;
+                  const dest = res.destination.index;
+                  const sourceItem = data.items[source];
+                  const destItem = data.items[dest];
 
-                  // action.mutate({
-                  //   action: "SWAP_ITEMS",
-                  //   data: { source: sourceItem.id, destination: destItem.id },
-                  // });
+                  action.mutate({
+                    action: "MOVE_ITEM",
+                    data: { itemId: sourceItem.id, beforeId: destItem.id },
+                  });
                 }}
               >
                 <Droppable droppableId="dropzone">
