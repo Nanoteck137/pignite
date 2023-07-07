@@ -32,7 +32,7 @@ const listRouter = router({
       const { id } = input;
       const result = await ctx.prisma.projectList.findUnique({
         where: { id },
-        include: { items: { orderBy: { createdAt: "asc" } } },
+        include: { items: { orderBy: { index: "asc" } } },
       });
 
       if (!result) {
@@ -72,6 +72,47 @@ const listRouter = router({
       const { id, data } = input;
       return await ctx.prisma.projectList.update({ where: { id }, data });
     }),
+  action: publicProcedure
+    .input(
+      z.discriminatedUnion("action", [
+        z.object({
+          action: z.literal("MOVE_ITEM"),
+          data: z.object({ itemId: Id, beforeItemId: Id }),
+        }),
+      ]),
+    )
+    .output(z.void())
+    .mutation(async ({ input, ctx }) => {
+      // if (input.action == "SWAP_ITEMS") {
+      //   const { source, destination } = input.data;
+      //   console.log("Swap", input.data.source, "-", input.data.destination);
+      //   const sourceItem = await ctx.prisma.projectListItem.findUnique({
+      //     where: { id: source },
+      //   });
+      //   const destItem = await ctx.prisma.projectListItem.findUnique({
+      //     where: { id: destination },
+      //   });
+      //
+      //   if (!sourceItem) {
+      //     throw new TRPCError({ code: "BAD_REQUEST" });
+      //   }
+      //
+      //   if (!destItem) {
+      //     throw new TRPCError({ code: "BAD_REQUEST" });
+      //   }
+      //
+      //   const first = ctx.prisma.projectListItem.update({
+      //     where: { id: source },
+      //     data: { index: destItem.index },
+      //   });
+      //   const second = ctx.prisma.projectListItem.update({
+      //     where: { id: destination },
+      //     data: { index: sourceItem.index },
+      //   });
+      //   const res = await ctx.prisma.$transaction([first, second]);
+      //   console.log("Res", res);
+      // }
+    }),
 
   createItem: publicProcedure
     .meta({ openapi: { method: "POST", path: "/project/list/item" } })
@@ -84,7 +125,15 @@ const listRouter = router({
     )
     .output(ProjectListItemSchema)
     .mutation(async ({ input, ctx }) => {
-      return await ctx.prisma.projectListItem.create({ data: input });
+      const count = await ctx.prisma.projectListItem.count({
+        where: { listId: input.listId },
+      });
+
+      const data = {
+        ...input,
+        index: count,
+      };
+      return await ctx.prisma.projectListItem.create({ data });
     }),
   deleteItem: publicProcedure
     .meta({ openapi: { method: "DELETE", path: "/project/list/item" } })
@@ -92,6 +141,17 @@ const listRouter = router({
     .output(z.void())
     .mutation(async ({ input, ctx }) => {
       const { id } = input;
+
+      const oldItem = await ctx.prisma.projectListItem.findUnique({
+        where: { id },
+      });
+      if (!oldItem) throw new TRPCError({ code: "BAD_REQUEST" });
+
+      await ctx.prisma.projectListItem.updateMany({
+        where: { index: { gt: oldItem.index } },
+        data: { index: { decrement: 1 } },
+      });
+
       await ctx.prisma.projectListItem.delete({ where: { id } });
     }),
   editItem: publicProcedure

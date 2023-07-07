@@ -36,6 +36,8 @@ model ProjectListItem {
   name String
   done Boolean
 
+  index Int
+
   list   ProjectList @relation(fields: [listId], references: [id], onDelete: Cascade)
   listId String
 
