@@ -91,8 +91,17 @@ const listRouter = router({
           where: { id: itemId },
         });
 
-        if (!item) {
+        // Get the full before item
+        const beforeItem = await ctx.prisma.projectListItem.findUnique({
+          where: { id: beforeId },
+        });
+
+        if (!item || !beforeItem) {
           throw new TRPCError({ code: "BAD_REQUEST" });
+        }
+
+        if (item.listId != beforeItem.listId) {
+          throw new TRPCError({ code: "METHOD_NOT_SUPPORTED" });
         }
 
         // Now get all of the list items
@@ -101,18 +110,11 @@ const listRouter = router({
           orderBy: { index: "asc" },
         });
 
-        // Find the dest item
-        const destItem = items.find((item) => item.id == beforeId);
-
-        if (!destItem) {
-          throw new TRPCError({ code: "BAD_REQUEST" });
-        }
-
         // Remove the item we are reordering
         const [removedItem] = items.splice(item.index, 1);
 
         // Insert the item where it should be
-        items.splice(destItem.index, 0, removedItem);
+        items.splice(beforeItem.index, 0, removedItem);
 
         // List of prisma transactions with new item index
         const updatedItems = [];
