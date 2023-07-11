@@ -101,17 +101,8 @@ export async function moveItemToList(
     const sourceIndex = sourceListItems.findIndex((i) => i.id == item.id);
     const destIndex = destListItems.findIndex((i) => i.id == beforeItem.id);
 
-    console.log("Before Source", sourceListItems);
-    console.log("Before Dest", destListItems);
-
     const [old] = sourceListItems.splice(sourceIndex, 1);
     destListItems.splice(destIndex, 0, old);
-
-    console.log("Item", item.name);
-    console.log("Before", beforeItem.name);
-
-    console.log("Source", sourceListItems);
-    console.log("Dest", destListItems);
 
     // List of prisma transactions with new item index
     const updatedItems = [];
