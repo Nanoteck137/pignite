@@ -223,7 +223,10 @@ const ProjectList = (props: ProjectListProps) => {
   });
 
   useEffect(() => {
-    if (data) setItems(data.items);
+    if (data) {
+      setItems(data.items);
+      console.log("UpdateItem", data.id);
+    }
   }, [data]);
 
   const newItem = trpc.project.list.createItem.useMutation({
@@ -525,9 +528,24 @@ const ProjectPage = () => {
     },
 
     onSettled: async (_data, _error, vars) => {
-      const listId = vars.item.listId;
-      const queryKey = getQueryKey(trpc.project.list.getList, { id: listId });
-      await queryClient.invalidateQueries(queryKey);
+      const { item, beforeItem } = vars;
+
+      const invalidateQueries = async (listId: string) => {
+        const queryKey = getQueryKey(trpc.project.list.getList, { id: listId });
+        console.log(queryKey);
+        await queryClient.invalidateQueries(queryKey);
+      };
+
+      if (item.listId == beforeItem.listId) {
+        await invalidateQueries(item.listId);
+      } else {
+        console.log("Item", item);
+        console.log("BeforeItem", beforeItem);
+        await invalidateQueries(beforeItem.listId);
+        await invalidateQueries(item.listId);
+      }
+
+      console.log("OnSettled");
     },
   });
 
@@ -577,9 +595,9 @@ const ProjectPage = () => {
 
       <div className="h-10"></div>
 
-      <div className="container mx-auto flex flex-col gap-2 px-2">
+      <div className="">
         <DragDropContext
-          onDragEnd={async (res) => {
+          onDragEnd={(res) => {
             if (!res.destination) {
               return;
             }
@@ -589,44 +607,80 @@ const ProjectPage = () => {
             const source = res.source;
             const dest = res.destination;
 
-            if (source.droppableId == dest.droppableId) {
-              // The same list
-              const listId = source.droppableId;
+            type List = RouterOutputs["project"]["list"]["getList"];
+
+            const getListData = (listId: string) => {
               const queryKey = getQueryKey(trpc.project.list.getList, {
                 id: listId,
               });
 
-              const listData = queryClient.getQueryData<
-                RouterOutputs["project"]["list"]["getList"]
-              >(queryKey, {
+              return queryClient.getQueryData<List>(queryKey, {
                 exact: false,
               });
+            };
 
-              if (!listData) {
+            if (source.droppableId == dest.droppableId) {
+              // The same list
+              const listId = source.droppableId;
+              const list = getListData(listId);
+
+              if (!list) {
                 return;
               }
 
-              const sourceItem = listData.items[source.index];
-              const destItem = listData.items[dest.index];
+              const sourceItem = list.items[source.index];
+              const destItem = list.items[dest.index];
 
-              const newItems = Array.from(listData.items);
+              const newItems = Array.from(list.items);
               const [old] = newItems.splice(source.index, 1);
               newItems.splice(dest.index, 0, old);
               updateEvents.emit("updateListItems", listId, newItems);
 
-              await action.mutateAsync({
+              action.mutate({
                 action: "MOVE_ITEM",
                 item: sourceItem,
                 beforeItem: destItem,
               });
             } else {
               // Not the same list
+              const sourceListId = source.droppableId;
+              const destListId = dest.droppableId;
+
+              const sourceList = getListData(sourceListId);
+              const destList = getListData(destListId);
+
+              if (!sourceList || !destList) {
+                return;
+              }
+
+              const sourceItem = sourceList.items[source.index];
+              const destItem = destList.items[dest.index];
+
+              const [old] = sourceList.items.splice(source.index, 1);
+              destList.items.splice(dest.index, 0, old);
+
+              updateEvents.emit(
+                "updateListItems",
+                sourceListId,
+                sourceList.items,
+              );
+              updateEvents.emit("updateListItems", destListId, destList.items);
+
+              action.mutate({
+                action: "MOVE_ITEM",
+                item: sourceItem,
+                beforeItem: destItem,
+              });
             }
           }}
         >
           <Droppable droppableId="list-dropzone" type="list">
             {(provided) => (
-              <div ref={provided.innerRef} {...provided.droppableProps}>
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="container mx-auto flex flex-col gap-2 px-2"
+              >
                 {data.lists.map((list, index) => {
                   return (
                     <ProjectList key={list.id} listId={list.id} index={index} />
@@ -637,11 +691,6 @@ const ProjectPage = () => {
             )}
           </Droppable>
         </DragDropContext>
-
-        {/* {(provided) => ( */}
-        {/*   <div  */}
-        {/*   </div> */}
-        {/* )} */}
       </div>
 
       <NewConfirmModal

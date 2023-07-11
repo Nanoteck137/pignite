@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { httpBatchLink } from "@trpc/client";
 import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -37,6 +38,7 @@ const App = () => {
         <BrowserRouter>
           <PageRoutes />
         </BrowserRouter>
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </trpc.Provider>
   );
