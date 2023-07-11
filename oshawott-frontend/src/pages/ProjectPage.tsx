@@ -69,7 +69,9 @@ const ViewListItem = ({ item }: ListItemProps) => {
           }
         />
         <div className="w-1"></div>
-        <span className="text-white">{item.name}</span>
+        <span className="text-white">
+          {item.name} - {item.index}
+        </span>
       </label>
 
       <Dropdown
@@ -480,55 +482,50 @@ const ProjectPage = () => {
 
   type ActionType = RouterInputs["project"]["list"]["action"]["action"];
   const context = trpc.useContext();
-  const action = useMutation({
-    mutationFn: (vars: {
-      action: ActionType;
-      item: ListItem;
-      beforeItem: ListItem;
-    }) => {
-      const { action, item, beforeItem } = vars;
+
+  const moveItem = useMutation({
+    mutationFn: (vars: { item: ListItem; beforeItem: ListItem }) => {
+      const { item, beforeItem } = vars;
       return context.client.project.list.action.mutate({
-        action,
+        action: "MOVE_ITEM",
         data: { itemId: item.id, beforeId: beforeItem.id },
       });
     },
 
     onMutate: async (d) => {
-      const { action, item, beforeItem } = d;
+      const { item, beforeItem } = d;
       // TODO(patrik): This need to change when we move items to other lists
       const queryKey = getQueryKey(trpc.project.list.getList, {
         id: item.listId,
       });
 
-      if (action == "MOVE_ITEM") {
-        await queryClient.cancelQueries(queryKey);
+      await queryClient.cancelQueries(queryKey);
 
-        const prev = queryClient.getQueryData<
-          RouterOutputs["project"]["list"]["getList"]
-        >(queryKey, { exact: false });
-        if (!prev) {
-          return;
-        }
-
-        const sourceIndex = prev.items.findIndex((item) => item.id == item.id);
-        const destIndex = prev.items.findIndex(
-          (item) => item.id == beforeItem.id,
-        );
-
-        const [reorderedItem] = prev.items.splice(sourceIndex, 1);
-        prev.items.splice(destIndex, 0, reorderedItem);
-
-        queryClient.setQueryData<RouterOutputs["project"]["list"]["getList"]>(
-          queryKey,
-          () => prev,
-        );
-
-        return { prev };
+      const prev = queryClient.getQueryData<
+        RouterOutputs["project"]["list"]["getList"]
+      >(queryKey, { exact: false });
+      if (!prev) {
+        return;
       }
+
+      const sourceIndex = prev.items.findIndex((item) => item.id == item.id);
+      const destIndex = prev.items.findIndex(
+        (item) => item.id == beforeItem.id,
+      );
+
+      const [reorderedItem] = prev.items.splice(sourceIndex, 1);
+      prev.items.splice(destIndex, 0, reorderedItem);
+
+      queryClient.setQueryData<RouterOutputs["project"]["list"]["getList"]>(
+        queryKey,
+        () => prev,
+      );
+
+      return { prev };
     },
 
     onSettled: async (_data, _error, vars) => {
-      const { item, beforeItem } = vars;
+      const { item } = vars;
 
       const invalidateQueries = async (listId: string) => {
         const queryKey = getQueryKey(trpc.project.list.getList, { id: listId });
@@ -536,16 +533,66 @@ const ProjectPage = () => {
         await queryClient.invalidateQueries(queryKey);
       };
 
-      if (item.listId == beforeItem.listId) {
-        await invalidateQueries(item.listId);
-      } else {
-        console.log("Item", item);
-        console.log("BeforeItem", beforeItem);
-        await invalidateQueries(beforeItem.listId);
-        await invalidateQueries(item.listId);
-      }
+      await invalidateQueries(item.listId);
+    },
+  });
 
-      console.log("OnSettled");
+  const moveItemToList = useMutation({
+    mutationFn: (vars: {
+      item: ListItem;
+      listId: string;
+      beforeItem?: ListItem;
+    }) => {
+      const { item, listId, beforeItem } = vars;
+      return context.client.project.list.action.mutate({
+        action: "MOVE_ITEM_TO_LIST",
+        data: { itemId: item.id, listId: listId, beforeId: beforeItem?.id },
+      });
+    },
+
+    // onMutate: async (d) => {
+    //   const { item, beforeItem } = d;
+    //   // TODO(patrik): This need to change when we move items to other lists
+    //   const queryKey = getQueryKey(trpc.project.list.getList, {
+    //     id: item.listId,
+    //   });
+    //
+    //   await queryClient.cancelQueries(queryKey);
+    //
+    //   const prev = queryClient.getQueryData<
+    //     RouterOutputs["project"]["list"]["getList"]
+    //   >(queryKey, { exact: false });
+    //   if (!prev) {
+    //     return;
+    //   }
+    //
+    //   const sourceIndex = prev.items.findIndex((item) => item.id == item.id);
+    //   const destIndex = prev.items.findIndex(
+    //     (item) => item.id == beforeItem.id,
+    //   );
+    //
+    //   const [reorderedItem] = prev.items.splice(sourceIndex, 1);
+    //   prev.items.splice(destIndex, 0, reorderedItem);
+    //
+    //   queryClient.setQueryData<RouterOutputs["project"]["list"]["getList"]>(
+    //     queryKey,
+    //     () => prev,
+    //   );
+    //
+    //   return { prev };
+    // },
+
+    onSettled: async (_data, _error, vars) => {
+      const { item, listId } = vars;
+
+      const invalidateQueries = async (listId: string) => {
+        const queryKey = getQueryKey(trpc.project.list.getList, { id: listId });
+        console.log(queryKey);
+        await queryClient.invalidateQueries(queryKey);
+      };
+
+      await invalidateQueries(item.listId);
+      await invalidateQueries(listId);
     },
   });
 
@@ -636,8 +683,7 @@ const ProjectPage = () => {
               newItems.splice(dest.index, 0, old);
               updateEvents.emit("updateListItems", listId, newItems);
 
-              action.mutate({
-                action: "MOVE_ITEM",
+              moveItem.mutate({
                 item: sourceItem,
                 beforeItem: destItem,
               });
@@ -655,6 +701,7 @@ const ProjectPage = () => {
 
               const sourceItem = sourceList.items[source.index];
               const destItem = destList.items[dest.index];
+              console.log("Dest", destItem);
 
               const [old] = sourceList.items.splice(source.index, 1);
               destList.items.splice(dest.index, 0, old);
@@ -666,9 +713,9 @@ const ProjectPage = () => {
               );
               updateEvents.emit("updateListItems", destListId, destList.items);
 
-              action.mutate({
-                action: "MOVE_ITEM",
+              moveItemToList.mutate({
                 item: sourceItem,
+                listId: destListId,
                 beforeItem: destItem,
               });
             }
