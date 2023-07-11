@@ -1,6 +1,33 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ProjectListItem } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { Id } from "../model/id";
+
+async function getList(prisma: PrismaClient, listId: Id) {
+  return await prisma.projectListItem.findMany({
+    where: { listId: listId },
+    orderBy: { index: "asc" },
+  });
+}
+
+async function updateList(
+  prisma: PrismaClient,
+  updatedItems: any[],
+  items: ProjectListItem[],
+) {
+  for (let index = 0; index < items.length; index++) {
+    const item = items[index];
+    // If the item index dont match then we need to update them
+    if (item.index != index) {
+      // Push on the new updated item transaction
+      updatedItems.push(
+        prisma.projectListItem.update({
+          where: { id: item.id },
+          data: { index },
+        }),
+      );
+    }
+  }
+}
 
 export async function moveItem(prisma: PrismaClient, itemId: Id, beforeId: Id) {
   // Get the full item
@@ -21,11 +48,7 @@ export async function moveItem(prisma: PrismaClient, itemId: Id, beforeId: Id) {
     throw new TRPCError({ code: "METHOD_NOT_SUPPORTED" });
   }
 
-  // Now get all of the list items
-  const items = await prisma.projectListItem.findMany({
-    where: { listId: item.listId },
-    orderBy: { index: "asc" },
-  });
+  const items = await getList(prisma, item.listId);
 
   // Remove the item we are reordering
   const [removedItem] = items.splice(item.index, 1);
@@ -34,23 +57,8 @@ export async function moveItem(prisma: PrismaClient, itemId: Id, beforeId: Id) {
   items.splice(beforeItem.index, 0, removedItem);
 
   // List of prisma transactions with new item index
-  const updatedItems = [];
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    // If the item index dont match then we need to update them
-    if (item.index != i) {
-      // Set the new index
-      item.index = i;
-      // Push on the new updated item transaction
-      updatedItems.push(
-        prisma.projectListItem.update({
-          where: { id: item.id },
-          data: { index: item.index },
-        }),
-      );
-    }
-  }
+  const updatedItems: any[] = [];
+  updateList(prisma, updatedItems, items);
 
   // Wait for all the transactions
   await prisma.$transaction(updatedItems);
@@ -87,16 +95,8 @@ export async function moveItemToList(
       throw new TRPCError({ code: "BAD_REQUEST" });
     }
 
-    // We need to reorder the list
-    const sourceListItems = await prisma.projectListItem.findMany({
-      where: { listId: item.listId },
-      orderBy: { index: "asc" },
-    });
-
-    const destListItems = await prisma.projectListItem.findMany({
-      where: { listId },
-      orderBy: { index: "asc" },
-    });
+    const sourceListItems = await getList(prisma, item.listId);
+    const destListItems = await getList(prisma, listId);
 
     const sourceIndex = sourceListItems.findIndex((i) => i.id == item.id);
     const destIndex = destListItems.findIndex((i) => i.id == beforeItem.id);
@@ -113,38 +113,11 @@ export async function moveItemToList(
       }),
     );
 
-    for (let index = 0; index < destListItems.length; index++) {
-      const item = destListItems[index];
-      // If the item index dont match then we need to update them
-      if (item.index != index) {
-        // Push on the new updated item transaction
-        updatedItems.push(
-          prisma.projectListItem.update({
-            where: { id: item.id },
-            data: { index },
-          }),
-        );
-      }
+    updateList(prisma, updatedItems, destListItems);
+    updateList(prisma, updatedItems, sourceListItems);
 
-      for (let i = 0; i < sourceListItems.length; i++) {
-        const item = sourceListItems[i];
-        // If the item index dont match then we need to update them
-        if (item.index != i) {
-          // Set the new index
-          item.index = i;
-          // Push on the new updated item transaction
-          updatedItems.push(
-            prisma.projectListItem.update({
-              where: { id: item.id },
-              data: { index: item.index },
-            }),
-          );
-        }
-      }
-
-      // Wait for all the transactions
-      await prisma.$transaction(updatedItems);
-    }
+    // Wait for all the transactions
+    await prisma.$transaction(updatedItems);
   } else {
     // Just add the item to the end of the list
     const count = await prisma.projectListItem.count({
@@ -158,28 +131,11 @@ export async function moveItemToList(
       data: { listId: listId, index: count },
     });
 
-    const items = await prisma.projectListItem.findMany({
-      where: { listId: sourceListId },
-    });
+    const items = await getList(prisma, sourceListId);
 
     // List of prisma transactions with new item index
-    const updatedItems = [];
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      // If the item index dont match then we need to update them
-      if (item.index != i) {
-        // Set the new index
-        item.index = i;
-        // Push on the new updated item transaction
-        updatedItems.push(
-          prisma.projectListItem.update({
-            where: { id: item.id },
-            data: { index: item.index },
-          }),
-        );
-      }
-    }
+    const updatedItems: any[] = [];
+    updateList(prisma, updatedItems, items);
 
     // Wait for all the transactions
     await prisma.$transaction(updatedItems);
