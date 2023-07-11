@@ -476,7 +476,7 @@ const ProjectPage = () => {
   });
 
   type ActionType = RouterInputs["project"]["list"]["action"]["action"];
-  const test = trpc.useContext();
+  const context = trpc.useContext();
   const action = useMutation({
     mutationFn: (vars: {
       action: ActionType;
@@ -484,7 +484,7 @@ const ProjectPage = () => {
       beforeItem: ListItem;
     }) => {
       const { action, item, beforeItem } = vars;
-      return test.client.project.list.action.mutate({
+      return context.client.project.list.action.mutate({
         action,
         data: { itemId: item.id, beforeId: beforeItem.id },
       });
@@ -530,32 +530,6 @@ const ProjectPage = () => {
       await queryClient.invalidateQueries(queryKey);
     },
   });
-
-  // const findItemInLists = (itemId: string) => {
-  //   if(data) {
-  //     data.lists.find(list => list.jjjjjjkjkjkjkjkjjjkjkjjjjjjkjkjkjkjkjkjkjkjkj)
-  //   }
-  // }
-
-  // const utils = trpc.useContext();
-  // const action = useMutation({
-  //   mutationFn: () => {
-  //     // utils.project.list.getListForProject;
-  //   },
-  // });
-
-  // const action = trpc.project.list.action.useMutation({
-  //   onMutate: async (d) => {},
-  //
-  //   onSettled: () => {
-  //     // if (data) {
-  //     //   const queryKey = getQueryKey(trpc.project.list.getList, {
-  //     //     id: data.id,
-  //     //   });
-  //     //   queryClient.invalidateQueries(queryKey);
-  //     // }
-  //   },
-  // });
 
   if (isError) return <p className="text-white">Error</p>;
   if (isLoading) return <p className="text-white">Loading...</p>;
@@ -617,7 +591,6 @@ const ProjectPage = () => {
 
             if (source.droppableId == dest.droppableId) {
               // The same list
-
               const listId = source.droppableId;
               const queryKey = getQueryKey(trpc.project.list.getList, {
                 id: listId,
@@ -649,57 +622,6 @@ const ProjectPage = () => {
             } else {
               // Not the same list
             }
-
-            // const source = res.source.index;
-            // const dest = res.destination.index;
-            // const sourceItem = data.items[source];
-            // const destItem = data.items[dest];
-            //
-            // const newItems = Array.from(items);
-            // const [reorderedItem] = newItems.splice(source, 1);
-            // newItems.splice(dest, 0, reorderedItem);
-            // setItems(newItems);
-            //
-
-            // const queryKey = getQueryKey(trpc.project.list.getList, {
-            //   id: listId,
-            // });
-            //
-            // if (d.action == "MOVE_ITEM") {
-            //   const { itemId, beforeId } = d.data;
-            //   await queryClient.cancelQueries(queryKey);
-            //
-            //   const prev = queryClient.getQueryData<
-            //     RouterOutputs["project"]["list"]["getList"]
-            //   >(queryKey, { exact: false });
-            //   if (!prev) {
-            //     return;
-            //   }
-            //
-            //   const sourceIndex = prev.items.findIndex((item) => item.id == itemId);
-            //   const destIndex = prev.items.findIndex((item) => item.id == beforeId);
-            //
-            //   const newItems = Array.from(prev.items);
-            //   const [reorderedItem] = newItems.splice(sourceIndex, 1);
-            //   newItems.splice(destIndex, 0, reorderedItem);
-            //
-            //   prev.items = newItems;
-            //
-            //   queryClient.setQueryData<RouterOutputs["project"]["list"]["getList"]>(
-            //     queryKey,
-            //     () => prev,
-            //   );
-            //
-            //   return { prev };
-            // }
-
-            // action.mutate(
-            //   {
-            //     action: "MOVE_ITEM",
-            //     data: { itemId: "", beforeId: "" },
-            //   },
-            //   {},
-            // );
           }}
         >
           <Droppable droppableId="list-dropzone" type="list">
