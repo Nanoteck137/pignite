@@ -97,8 +97,6 @@ export async function moveItemToList(
       where: { listId: sourceListId },
     });
 
-    // This is a test
-
     // List of prisma transactions with new item index
     const updatedItems = [];
 
