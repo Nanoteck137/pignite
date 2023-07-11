@@ -68,10 +68,8 @@ const ViewListItem = ({ item }: ListItemProps) => {
             editItem.mutate({ id: item.id, data: { done: !item.done } })
           }
         />
-        <div className="w-1"></div>
-        <span className="text-white">
-          {item.name} - {item.index}
-        </span>
+        <div className="w-1" />
+        <span className="text-white">{item.name}</span>
       </label>
 
       <Dropdown
@@ -227,7 +225,6 @@ const ProjectList = (props: ProjectListProps) => {
   useEffect(() => {
     if (data) {
       setItems(data.items);
-      console.log("UpdateItem", data.id);
     }
   }, [data]);
 
@@ -529,7 +526,6 @@ const ProjectPage = () => {
 
       const invalidateQueries = async (listId: string) => {
         const queryKey = getQueryKey(trpc.project.list.getList, { id: listId });
-        console.log(queryKey);
         await queryClient.invalidateQueries(queryKey);
       };
 
@@ -587,7 +583,6 @@ const ProjectPage = () => {
 
       const invalidateQueries = async (listId: string) => {
         const queryKey = getQueryKey(trpc.project.list.getList, { id: listId });
-        console.log(queryKey);
         await queryClient.invalidateQueries(queryKey);
       };
 
@@ -649,8 +644,6 @@ const ProjectPage = () => {
               return;
             }
 
-            console.log("End", res);
-
             const source = res.source;
             const dest = res.destination;
 
@@ -701,7 +694,6 @@ const ProjectPage = () => {
 
               const sourceItem = sourceList.items[source.index];
               const destItem = destList.items[dest.index];
-              console.log("Dest", destItem);
 
               const [old] = sourceList.items.splice(source.index, 1);
               destList.items.splice(dest.index, 0, old);
