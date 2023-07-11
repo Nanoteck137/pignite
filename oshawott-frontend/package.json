@@ -21,6 +21,7 @@
     "@trpc/react-query": "^10.29.1",
     "@trpc/server": "^10.29.1",
     "@zodios/core": "^10.9.0",
+    "events": "^3.3.0",
     "framer-motion": "^10.12.16",
     "pocketbase": "^0.15.0",
     "react": "^18.2.0",
