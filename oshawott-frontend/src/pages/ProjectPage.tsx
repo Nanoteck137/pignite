@@ -6,6 +6,7 @@ import {
   PencilSquareIcon,
   PlusIcon,
   TrashIcon,
+  Bars2Icon,
 } from "@heroicons/react/20/solid";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
@@ -201,10 +202,11 @@ const NewItemDialog = forwardRef<HTMLDialogElement, NewItemDialogProps>(
 
 interface ProjectListProps {
   listId: string;
+  index: number;
 }
 
 const ProjectList = (props: ProjectListProps) => {
-  const { listId } = props;
+  const { listId, index } = props;
 
   const queryClient = useQueryClient();
 
@@ -304,117 +306,99 @@ const ProjectList = (props: ProjectListProps) => {
 
   return (
     <>
-      <Disclosure
-        className="rounded bg-slate-700 px-2 elevation-4"
-        as="div"
-        key={data.id}
-      >
-        {({ open }) => (
-          <>
-            <div className="flex items-center">
-              <Disclosure.Button className="flex w-full items-center justify-between py-2">
-                <div className="flex items-center">
-                  <ChevronUpIcon
-                    className={`h-6 w-6 text-white transition-transform duration-200 ${
-                      open ? "" : "rotate-180"
-                    }`}
-                  />
-                  <span className="text-white">{data.name}</span>
-                </div>
-              </Disclosure.Button>
-            </div>
+      <Draggable draggableId={listId} index={index}>
+        {(provided) => (
+          <div ref={provided.innerRef} {...provided.draggableProps}>
+            <Disclosure
+              className="rounded bg-slate-700 px-2 elevation-4"
+              as="div"
+              key={data.id}
+            >
+              {({ open }) => (
+                <>
+                  <div className="flex items-center">
+                    <Disclosure.Button className="flex w-full items-center justify-between py-2">
+                      <div className="flex items-center">
+                        <ChevronUpIcon
+                          className={`h-6 w-6 text-white transition-transform duration-200 ${
+                            open ? "" : "rotate-180"
+                          }`}
+                        />
+                        <span className="text-white">{data.name}</span>
+                      </div>
+                      <div {...provided.dragHandleProps}>
+                        <Bars2Icon className="h-6 w-6 text-white" />
+                      </div>
+                    </Disclosure.Button>
+                  </div>
 
-            <Disclosure.Panel className="flex flex-col gap-1 pb-2">
-              <div className="flex gap-2">
-                <Button
-                  className="flex flex-grow items-center"
-                  onClick={() =>
-                    newItemModal.current && newItemModal.current.showModal()
-                  }
-                >
-                  <PlusIcon className="h-8 w-8" />
-                  <span>New Item</span>
-                </Button>
-                <Button
-                  varient="warning"
-                  varientStyle="outline"
-                  onClick={() => {
-                    editModal.current && editModal.current.showModal();
-                  }}
-                >
-                  <PencilSquareIcon className="h-6 w-6" />
-                </Button>
-                <Button
-                  varient="danger"
-                  varientStyle="outline"
-                  onClick={() =>
-                    deleteModal.current && deleteModal.current.showModal()
-                  }
-                >
-                  <TrashIcon className="h-6 w-6" />
-                </Button>
-              </div>
-              <DragDropContext
-                onDragEnd={async (res) => {
-                  if (!res.destination) {
-                    return;
-                  }
-
-                  console.log("End", res);
-
-                  // const source = res.source.index;
-                  // const dest = res.destination.index;
-
-                  const source = res.source.index;
-                  const dest = res.destination.index;
-                  const sourceItem = data.items[source];
-                  const destItem = data.items[dest];
-
-                  const newItems = Array.from(items);
-                  const [reorderedItem] = newItems.splice(source, 1);
-                  newItems.splice(dest, 0, reorderedItem);
-                  setItems(newItems);
-
-                  action.mutate({
-                    action: "MOVE_ITEM",
-                    data: { itemId: sourceItem.id, beforeId: destItem.id },
-                  });
-                }}
-              >
-                <Droppable droppableId="dropzone">
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="flex flex-col"
-                    >
-                      {items.map((item, index) => (
-                        <Draggable
-                          key={item.id}
-                          draggableId={item.id}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <div
-                              className="relative"
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                            >
-                              <ViewListItem item={item} />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+                  <Disclosure.Panel className="flex flex-col gap-1 pb-2">
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex flex-grow items-center"
+                        onClick={() =>
+                          newItemModal.current &&
+                          newItemModal.current.showModal()
+                        }
+                      >
+                        <PlusIcon className="h-8 w-8" />
+                        <span>New Item</span>
+                      </Button>
+                      <Button
+                        varient="warning"
+                        varientStyle="outline"
+                        onClick={() => {
+                          editModal.current && editModal.current.showModal();
+                        }}
+                      >
+                        <PencilSquareIcon className="h-6 w-6" />
+                      </Button>
+                      <Button
+                        varient="danger"
+                        varientStyle="outline"
+                        onClick={() =>
+                          deleteModal.current && deleteModal.current.showModal()
+                        }
+                      >
+                        <TrashIcon className="h-6 w-6" />
+                      </Button>
                     </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </Disclosure.Panel>
-          </>
+                    <Droppable droppableId={listId} type="item">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="flex flex-col"
+                        >
+                          {items.map((item, index) => (
+                            <Draggable
+                              key={item.id}
+                              draggableId={item.id}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <div
+                                  className="relative"
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                >
+                                  <ViewListItem item={item} />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </Disclosure.Panel>
+                </>
+              )}
+            </Disclosure>
+          </div>
         )}
-      </Disclosure>
+      </Draggable>
 
       <NewItemDialog
         ref={newItemModal}
@@ -572,9 +556,51 @@ const ProjectPage = () => {
       <div className="h-10"></div>
 
       <div className="container mx-auto flex flex-col gap-2 px-2">
-        {data.lists.map((list) => {
-          return <ProjectList key={list.id} listId={list.id} />;
-        })}
+        <DragDropContext
+          onDragEnd={async (res) => {
+            if (!res.destination) {
+              return;
+            }
+
+            console.log("End", res);
+
+            // const source = res.source.index;
+            // const dest = res.destination.index;
+
+            // const source = res.source.index;
+            // const dest = res.destination.index;
+            // const sourceItem = data.items[source];
+            // const destItem = data.items[dest];
+            //
+            // const newItems = Array.from(items);
+            // const [reorderedItem] = newItems.splice(source, 1);
+            // newItems.splice(dest, 0, reorderedItem);
+            // setItems(newItems);
+            //
+            // action.mutate({
+            //   action: "MOVE_ITEM",
+            //   data: { itemId: sourceItem.id, beforeId: destItem.id },
+            // });
+          }}
+        >
+          <Droppable droppableId="list-dropzone" type="list">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps}>
+                {data.lists.map((list, index) => {
+                  return (
+                    <ProjectList key={list.id} listId={list.id} index={index} />
+                  );
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+
+        {/* {(provided) => ( */}
+        {/*   <div  */}
+        {/*   </div> */}
+        {/* )} */}
       </div>
 
       <NewConfirmModal
