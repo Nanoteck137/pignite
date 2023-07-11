@@ -17,7 +17,7 @@ import Button from "../components/Button";
 import NewConfirmModal from "../components/ConfirmModal";
 import CreateModal from "../components/CreateModal";
 import Dropdown from "../components/Dropdown";
-import { RouterInputs, RouterOutputs, trpc } from "../trpc";
+import { RouterOutputs, trpc } from "../trpc";
 import { handleModalOutsideClick } from "../utils/modal";
 import Input from "../components/Input";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
@@ -477,7 +477,6 @@ const ProjectPage = () => {
     },
   });
 
-  type ActionType = RouterInputs["project"]["list"]["action"]["action"];
   const context = trpc.useContext();
 
   const moveItem = useMutation({
