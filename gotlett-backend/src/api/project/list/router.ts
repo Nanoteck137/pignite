@@ -6,7 +6,7 @@ import {
 } from "../../../model/project";
 import { TRPCError } from "@trpc/server";
 import { Id, WithId } from "../../../model/id";
-import { moveItem, moveItemToList } from "../../../utils/list";
+import { moveItem, moveItemToList, moveList } from "../../../utils/list";
 
 const listRouter = router({
   getListForProject: publicProcedure
@@ -50,7 +50,13 @@ const listRouter = router({
     .input(z.object({ name: z.string(), projectId: Id }))
     .output(ProjectListSchema)
     .mutation(async ({ input, ctx }) => {
-      return await ctx.prisma.projectList.create({ data: input });
+      const count = await ctx.prisma.projectList.count();
+
+      const data = {
+        ...input,
+        index: count,
+      };
+      return await ctx.prisma.projectList.create({ data });
     }),
   delete: publicProcedure
     .meta({ openapi: { method: "DELETE", path: "/project/list" } })
@@ -84,6 +90,10 @@ const listRouter = router({
           action: z.literal("MOVE_ITEM_TO_LIST"),
           data: z.object({ itemId: Id, listId: Id, beforeId: Id.optional() }),
         }),
+        z.object({
+          action: z.literal("MOVE_LIST"),
+          data: z.object({ listId: Id, beforeId: Id }),
+        }),
       ]),
     )
     .output(z.void())
@@ -94,6 +104,9 @@ const listRouter = router({
       } else if (input.action == "MOVE_ITEM_TO_LIST") {
         const { itemId, listId, beforeId } = input.data;
         await moveItemToList(ctx.prisma, itemId, listId, beforeId);
+      } else if (input.action == "MOVE_LIST") {
+        const { listId, beforeId } = input.data;
+        await moveList(ctx.prisma, listId, beforeId);
       }
     }),
 

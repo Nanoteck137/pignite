@@ -141,3 +141,7 @@ export async function moveItemToList(
     await prisma.$transaction(updatedItems);
   }
 }
+
+export async function moveList(prisma: PrismaClient, itemId: Id, beforeId: Id) {
+  throw new TRPCError({ code: "METHOD_NOT_SUPPORTED" });
+}

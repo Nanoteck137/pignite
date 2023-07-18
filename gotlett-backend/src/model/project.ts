@@ -14,6 +14,7 @@ export const ProjectListSchema = z.object({
   id: z.string().cuid(),
   name: z.string(),
   projectId: z.string().cuid(),
+  index: z.number(),
 });
 export type ProjectListSchema = z.infer<typeof ProjectListSchema>;
 
