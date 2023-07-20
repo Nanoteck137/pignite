@@ -29,7 +29,7 @@ const projectRouter = router({
       const result = await ctx.prisma.project.findUnique({
         where: { id: input.id },
         include: {
-          lists: { select: { id: true }, orderBy: { createdAt: "asc" } },
+          lists: { select: { id: true }, orderBy: { index: "asc" } },
         },
       });
       if (!result)

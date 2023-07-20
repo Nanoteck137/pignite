@@ -142,6 +142,40 @@ export async function moveItemToList(
   }
 }
 
-export async function moveList(prisma: PrismaClient, itemId: Id, beforeId: Id) {
-  throw new TRPCError({ code: "METHOD_NOT_SUPPORTED" });
+export async function moveList(prisma: PrismaClient, listId: Id, beforeId: Id) {
+  const list = await prisma.projectList.findUnique({ where: { id: listId } });
+  if (!list) {
+    throw new TRPCError({ code: "BAD_REQUEST" });
+  }
+
+  const lists = await prisma.projectList.findMany({
+    where: { projectId: list.projectId },
+    orderBy: { index: "asc" },
+  });
+
+  const before = lists.find((item) => item.id == beforeId);
+
+  if (!before) {
+    throw new TRPCError({ code: "BAD_REQUEST" });
+  }
+
+  const [old] = lists.splice(list.index, 1);
+  lists.splice(before.index, 0, old);
+
+  let updatedItems = [];
+  for (let index = 0; index < lists.length; index++) {
+    const list = lists[index];
+    // If the item index dont match then we need to update them
+    if (list.index != index) {
+      // Push on the new updated item transaction
+      updatedItems.push(
+        prisma.projectList.update({
+          where: { id: list.id },
+          data: { index },
+        }),
+      );
+    }
+  }
+
+  await prisma.$transaction(updatedItems);
 }

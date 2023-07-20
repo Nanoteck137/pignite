@@ -12,11 +12,12 @@ const listRouter = router({
   getListForProject: publicProcedure
     .meta({ openapi: { method: "GET", path: "/project/list/getForProject" } })
     .input(z.object({ projectId: Id }))
-    .output(z.array(ProjectListSchema))
+    .output(z.array(WithId))
     .query(async ({ input, ctx }) => {
       const { projectId } = input;
       return await ctx.prisma.projectList.findMany({
         where: { projectId },
+        select: { id: true },
       });
     }),
   getList: publicProcedure
