@@ -22,7 +22,7 @@ model ProjectList {
   id   String @id @default(cuid())
   name String
 
-  index Int
+  index Int @default(0)
 
   items ProjectListItem[]
 
@@ -38,7 +38,7 @@ model ProjectListItem {
   name String
   done Boolean
 
-  index Int
+  index Int @default(0)
 
   list   ProjectList @relation(fields: [listId], references: [id], onDelete: Cascade)
   listId String
