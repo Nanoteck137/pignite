@@ -223,7 +223,6 @@ const ProjectList = (props: ProjectListProps) => {
   });
 
   useEffect(() => {
-    console.log("HELLO?");
     if (data) {
       setItems(data.items);
     }
@@ -293,9 +292,7 @@ const ProjectList = (props: ProjectListProps) => {
                             open ? "" : "rotate-180"
                           }`}
                         />
-                        <span className="text-white">
-                          {data.name} - {data.index}
-                        </span>
+                        <span className="text-white">{data.name}</span>
                       </div>
                       <div {...provided.dragHandleProps}>
                         <Bars2Icon className="h-6 w-6 text-white" />
@@ -456,7 +453,6 @@ const ProjectPage = () => {
   });
 
   useEffect(() => {
-    console.log("WOT");
     if (data) {
       setLists(data.lists.map((list) => list.id));
     }
@@ -704,8 +700,6 @@ const ProjectPage = () => {
             if (!res.destination) {
               return;
             }
-
-            console.log("Res", res);
 
             const source = res.source;
             const dest = res.destination;
